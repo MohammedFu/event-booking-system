@@ -1,0 +1,363 @@
+import 'package:flutter/material.dart';
+import 'package:shop/constants.dart';
+import 'package:shop/models/booking_models.dart';
+import 'package:shop/route/route_constants.dart';
+import 'package:shop/services/booking_provider.dart';
+import 'package:provider/provider.dart';
+
+class ServiceListingScreen extends StatefulWidget {
+  final ServiceType? serviceType;
+
+  const ServiceListingScreen({super.key, this.serviceType});
+
+  @override
+  State<ServiceListingScreen> createState() => _ServiceListingScreenState();
+}
+
+class _ServiceListingScreenState extends State<ServiceListingScreen> {
+  ServiceType? _selectedType;
+  String _sortBy = 'rating';
+  final _searchController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedType = widget.serviceType;
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(_getTypeLabel(_selectedType) ?? 'All Services'),
+      ),
+      body: Column(
+        children: [
+          _buildFilterBar(context),
+          Expanded(
+            child: Consumer<BookingProvider>(
+              builder: (context, provider, _) {
+                final services = provider.getServices(
+                  type: _selectedType,
+                  searchQuery: _searchController.text.isEmpty
+                      ? null
+                      : _searchController.text,
+                  sortBy: _sortBy,
+                );
+
+                if (services.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.search_off,
+                            size: 64, color: Colors.grey),
+                        const SizedBox(height: 16),
+                        Text('No services found',
+                            style: Theme.of(context).textTheme.titleMedium),
+                      ],
+                    ),
+                  );
+                }
+
+                return ListView.builder(
+                  padding: const EdgeInsets.all(defaultPadding),
+                  itemCount: services.length,
+                  itemBuilder: (context, index) {
+                    return _ServiceListCard(
+                      service: services[index],
+                      onTap: () {
+                        Navigator.pushNamed(
+                          context,
+                          serviceDetailScreenRoute,
+                          arguments: services[index],
+                        );
+                      },
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterBar(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(defaultPadding),
+      child: Column(
+        children: [
+          TextField(
+            controller: _searchController,
+            onChanged: (_) => setState(() {}),
+            decoration: InputDecoration(
+              hintText: 'Search services...',
+              prefixIcon: const Icon(Icons.search),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(defaultBorderRadious),
+                borderSide: BorderSide.none,
+              ),
+              filled: true,
+              fillColor: Theme.of(context).brightness == Brightness.light
+                  ? lightGreyColor
+                  : darkGreyColor,
+              suffixIcon: _searchController.text.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear, size: 20),
+                      onPressed: () {
+                        _searchController.clear();
+                        setState(() {});
+                      },
+                    )
+                  : null,
+            ),
+          ),
+          const SizedBox(height: 12),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _FilterChip(
+                  label: 'All',
+                  selected: _selectedType == null,
+                  onSelected: () => setState(() => _selectedType = null),
+                ),
+                _FilterChip(
+                  label: 'Halls',
+                  selected: _selectedType == ServiceType.hall,
+                  onSelected: () =>
+                      setState(() => _selectedType = ServiceType.hall),
+                ),
+                _FilterChip(
+                  label: 'Cars',
+                  selected: _selectedType == ServiceType.car,
+                  onSelected: () =>
+                      setState(() => _selectedType = ServiceType.car),
+                ),
+                _FilterChip(
+                  label: 'Photographers',
+                  selected: _selectedType == ServiceType.photographer,
+                  onSelected: () =>
+                      setState(() => _selectedType = ServiceType.photographer),
+                ),
+                _FilterChip(
+                  label: 'Entertainers',
+                  selected: _selectedType == ServiceType.entertainer,
+                  onSelected: () =>
+                      setState(() => _selectedType = ServiceType.entertainer),
+                ),
+                const SizedBox(width: 16),
+                DropdownButton<String>(
+                  value: _sortBy,
+                  underline: const SizedBox(),
+                  items: const [
+                    DropdownMenuItem(value: 'rating', child: Text('Top Rated')),
+                    DropdownMenuItem(
+                        value: 'price_low', child: Text('Price: Low')),
+                    DropdownMenuItem(
+                        value: 'price_high', child: Text('Price: High')),
+                    DropdownMenuItem(
+                        value: 'reviews', child: Text('Most Reviewed')),
+                  ],
+                  onChanged: (val) {
+                    if (val != null) setState(() => _sortBy = val);
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String? _getTypeLabel(ServiceType? type) {
+    switch (type) {
+      case ServiceType.hall:
+        return 'Event Halls';
+      case ServiceType.car:
+        return 'Wedding Cars';
+      case ServiceType.photographer:
+        return 'Photographers';
+      case ServiceType.entertainer:
+        return 'Entertainers';
+      case null:
+        return null;
+    }
+  }
+}
+
+class _FilterChip extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onSelected;
+
+  const _FilterChip({
+    required this.label,
+    required this.selected,
+    required this.onSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: ChoiceChip(
+        label: Text(label),
+        selected: selected,
+        onSelected: (_) => onSelected(),
+        selectedColor: primaryColor.withOpacity(0.2),
+      ),
+    );
+  }
+}
+
+class _ServiceListCard extends StatelessWidget {
+  final ServiceModel service;
+  final VoidCallback onTap;
+
+  const _ServiceListCard({required this.service, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: defaultPadding),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(defaultBorderRadious),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(defaultBorderRadious),
+            color: Theme.of(context).cardColor,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              ClipRRect(
+                borderRadius: const BorderRadius.horizontal(
+                    left: Radius.circular(defaultBorderRadious)),
+                child: SizedBox(
+                  width: 120,
+                  height: 120,
+                  child: service.images.isNotEmpty
+                      ? Image.network(
+                          service.images.first,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Container(
+                            color: primaryColor.withOpacity(0.1),
+                            child: Icon(service.serviceTypeIcon,
+                                color: primaryColor, size: 32),
+                          ),
+                        )
+                      : Container(
+                          color: primaryColor.withOpacity(0.1),
+                          child: Icon(service.serviceTypeIcon,
+                              color: primaryColor, size: 32),
+                        ),
+                ),
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: primaryColor.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              service.serviceTypeLabel,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .labelSmall
+                                  ?.copyWith(color: primaryColor),
+                            ),
+                          ),
+                          if (service.provider?.isVerified == true) ...[
+                            const SizedBox(width: 6),
+                            const Icon(Icons.verified,
+                                size: 14, color: primaryColor),
+                          ],
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        service.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                      ),
+                      if (service.provider != null) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          service.provider!.businessName,
+                          style:
+                              Theme.of(context).textTheme.labelSmall?.copyWith(
+                                    color: Theme.of(context)
+                                        .textTheme
+                                        .labelSmall
+                                        ?.color
+                                        ?.withOpacity(0.6),
+                                  ),
+                        ),
+                      ],
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          const Icon(Icons.star,
+                              size: 14, color: Color(0xFFFFBE21)),
+                          Text(
+                            '${service.provider?.rating ?? 0} (${service.provider?.reviewCount ?? 0})',
+                            style: Theme.of(context).textTheme.labelSmall,
+                          ),
+                          const Spacer(),
+                          Text(
+                            '\$${service.basePrice.toInt()}',
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleSmall
+                                ?.copyWith(
+                                  color: primaryColor,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                          ),
+                          if (service.pricingModel == PricingModel.hourly)
+                            Text(
+                              '/hr',
+                              style: Theme.of(context).textTheme.labelSmall,
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

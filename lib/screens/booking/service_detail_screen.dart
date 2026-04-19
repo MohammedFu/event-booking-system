@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:shop/constants.dart';
-import 'package:shop/models/booking_models.dart';
-import 'package:shop/route/route_constants.dart';
-import 'package:shop/services/booking_provider.dart';
+import 'package:munasabati/constants.dart';
+import 'package:munasabati/l10n/app_localizations.dart';
+import 'package:munasabati/models/booking_models.dart';
+import 'package:munasabati/route/route_constants.dart';
+import 'package:munasabati/services/booking_provider.dart';
 import 'package:provider/provider.dart';
 
 class ServiceDetailScreen extends StatefulWidget {
@@ -39,16 +40,12 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
             actions: [
               Consumer<BookingProvider>(
                 builder: (context, provider, _) {
-                  final isBookmarked =
-                      provider.isBookmarked(service.id);
+                  final isBookmarked = provider.isBookmarked(service.id);
                   return IconButton(
                     icon: Icon(
-                      isBookmarked
-                          ? Icons.bookmark
-                          : Icons.bookmark_border,
+                      isBookmarked ? Icons.bookmark : Icons.bookmark_border,
                     ),
-                    onPressed: () =>
-                        provider.toggleBookmark(service.id),
+                    onPressed: () => provider.toggleBookmark(service.id),
                   );
                 },
               ),
@@ -141,12 +138,11 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                                   size: 12, color: Color(0xFF2ED573)),
                               const SizedBox(width: 4),
                               Text(
-                                'Verified',
+                                AppLocalizations.of(context).verified,
                                 style: Theme.of(context)
                                     .textTheme
                                     .labelSmall
-                                    ?.copyWith(
-                                        color: const Color(0xFF2ED573)),
+                                    ?.copyWith(color: const Color(0xFF2ED573)),
                               ),
                             ],
                           ),
@@ -170,19 +166,21 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                         const SizedBox(width: 4),
                         Text(
                           '${service.provider!.rating}',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
                         ),
                         Text(
                           ' (${service.provider!.reviewCount} reviews)',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Theme.of(context)
-                                    .textTheme
-                                    .bodySmall
-                                    ?.color
-                                    ?.withOpacity(0.6),
-                              ),
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Theme.of(context)
+                                        .textTheme
+                                        .bodySmall
+                                        ?.color
+                                        ?.withOpacity(0.6),
+                                  ),
                         ),
                         const Spacer(),
                         if (service.provider!.city != null)
@@ -203,14 +201,15 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                   _buildPricingCard(context, service),
                   const SizedBox(height: 20),
                   Text(
-                    'About',
+                    AppLocalizations.of(context).about,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    service.description ?? 'No description available.',
+                    service.description ??
+                        AppLocalizations.of(context).noDescription,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           height: 1.5,
                         ),
@@ -220,6 +219,10 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                   const SizedBox(height: 20),
                   if (service.provider != null)
                     _buildProviderCard(context, service.provider!),
+                  const SizedBox(height: 20),
+                  _buildReviewsLink(context, service),
+                  const SizedBox(height: 20),
+                  _buildCancellationPolicy(context, service),
                   const SizedBox(height: 80),
                 ],
               ),
@@ -244,7 +247,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Price',
+                AppLocalizations.of(context).price,
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
                       color: primaryColor,
                     ),
@@ -281,12 +284,12 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  'Capacity',
+                  AppLocalizations.of(context).capacity,
                   style: Theme.of(context).textTheme.labelSmall,
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${service.maxCapacity} guests',
+                  '${service.maxCapacity} ${AppLocalizations.of(context).guests}',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
@@ -318,13 +321,15 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
           items.add(_attrItem(Icons.check_circle, a, small: true));
       case ServiceType.car:
         if (attrs.make != null && attrs.model != null)
-          items.add(_attrItem(Icons.directions_car, '${attrs.make} ${attrs.model}'));
+          items.add(
+              _attrItem(Icons.directions_car, '${attrs.make} ${attrs.model}'));
         if (attrs.year != null)
           items.add(_attrItem(Icons.calendar_today, '${attrs.year}'));
         if (attrs.color != null)
           items.add(_attrItem(Icons.color_lens, attrs.color!));
         if (attrs.maxPassengers != null)
-          items.add(_attrItem(Icons.airline_seat_recline_normal, '${attrs.maxPassengers} passengers'));
+          items.add(_attrItem(Icons.airline_seat_recline_normal,
+              '${attrs.maxPassengers} passengers'));
         for (final f in attrs.features)
           items.add(_attrItem(Icons.check_circle, f, small: true));
       case ServiceType.photographer:
@@ -349,7 +354,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Features & Details',
+          AppLocalizations.of(context).featuresDetails,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
@@ -371,8 +376,8 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-            color: Theme.of(context).dividerColor.withOpacity(0.2)),
+        border:
+            Border.all(color: Theme.of(context).dividerColor.withOpacity(0.2)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -395,7 +400,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Service Provider',
+          AppLocalizations.of(context).serviceProvider,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
@@ -434,10 +439,9 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                   children: [
                     Text(
                       provider.businessName,
-                      style:
-                          Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
                     ),
                     const SizedBox(height: 4),
                     Row(
@@ -453,12 +457,11 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                           const Icon(Icons.verified,
                               size: 14, color: Color(0xFF2ED573)),
                           Text(
-                            'Verified',
+                            AppLocalizations.of(context).verified,
                             style: Theme.of(context)
                                 .textTheme
                                 .bodySmall
-                                ?.copyWith(
-                                    color: const Color(0xFF2ED573)),
+                                ?.copyWith(color: const Color(0xFF2ED573)),
                           ),
                         ],
                       ],
@@ -469,6 +472,119 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
               const Icon(Icons.chevron_right),
             ],
           ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildReviewsLink(BuildContext context, ServiceModel service) {
+    return InkWell(
+      onTap: () {
+        Navigator.pushNamed(
+          context,
+          bookingReviewsScreenRoute,
+          arguments: {
+            'serviceId': service.id,
+            'serviceTitle': service.title,
+          },
+        );
+      },
+      borderRadius: BorderRadius.circular(defaultBorderRadious),
+      child: Container(
+        padding: const EdgeInsets.all(defaultPadding),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(defaultBorderRadious),
+          color: Theme.of(context).cardColor,
+          border: Border.all(
+              color: Theme.of(context).dividerColor.withOpacity(0.2)),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.rate_review, color: primaryColor),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    AppLocalizations.of(context).reviews,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                  const SizedBox(height: 2),
+                  if (service.provider != null)
+                    Row(
+                      children: [
+                        Icon(Icons.star, size: 14, color: Colors.amber),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${service.provider!.rating} (${service.provider!.reviewCount} reviews)',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ],
+                    ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCancellationPolicy(BuildContext context, ServiceModel service) {
+    final policy = service.cancellationPolicy;
+    return Container(
+      padding: const EdgeInsets.all(defaultPadding),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(defaultBorderRadious),
+        color: Theme.of(context).cardColor,
+        border:
+            Border.all(color: Theme.of(context).dividerColor.withOpacity(0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.shield_outlined, color: primaryColor, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                AppLocalizations.of(context).cancellationPolicy,
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          _policyRow(Icons.check_circle_outline, Colors.green,
+              'Free cancellation up to ${policy.freeCancellationHours}h before'),
+          const SizedBox(height: 4),
+          _policyRow(Icons.info_outline, Colors.orange,
+              '${policy.partialRefundPercentage.toInt()}% refund after that'),
+          const SizedBox(height: 4),
+          _policyRow(
+            policy.depositRefundable
+                ? Icons.check_circle_outline
+                : Icons.cancel_outlined,
+            policy.depositRefundable ? Colors.green : Colors.red,
+            'Deposit ${policy.depositRefundable ? 'is' : 'is not'} refundable',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _policyRow(IconData icon, Color color, String text) {
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: color),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(text, style: Theme.of(context).textTheme.bodySmall),
         ),
       ],
     );
@@ -521,7 +637,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
-                child: const Text('Book Now'),
+                child: Text(AppLocalizations.of(context).bookNow),
               ),
             ),
           ],
@@ -531,15 +647,16 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
   }
 
   String _pricingModelLabel(PricingModel model) {
+    final l10n = AppLocalizations.of(context);
     switch (model) {
       case PricingModel.flat:
-        return 'Flat rate';
+        return l10n.flatRate;
       case PricingModel.hourly:
-        return 'Per hour';
+        return l10n.perHour;
       case PricingModel.perEvent:
-        return 'Per event';
+        return l10n.perEvent;
       case PricingModel.tiered:
-        return 'Tiered pricing';
+        return l10n.tieredPricing;
     }
   }
 }

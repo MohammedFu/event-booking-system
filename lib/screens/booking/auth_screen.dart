@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:shop/constants.dart';
-import 'package:shop/route/route_constants.dart' as routes;
-import 'package:shop/services/auth_provider.dart';
+import 'package:munasabati/constants.dart';
+import 'package:munasabati/l10n/app_localizations.dart';
+import 'package:munasabati/route/route_constants.dart' as routes;
+import 'package:munasabati/services/auth_provider.dart';
 import 'package:provider/provider.dart';
 
 class AuthScreen extends StatefulWidget {
@@ -42,20 +43,21 @@ class _AuthScreenState extends State<AuthScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       body: SafeArea(
         child: Column(
           children: [
             const SizedBox(height: defaultPadding * 2),
             Text(
-              'EventBooker',
+              l10n.eventBookerAppName,
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
             ),
             const SizedBox(height: defaultPadding),
             Text(
-              'Book the perfect services for your event',
+              l10n.eventBookerTagline,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Theme.of(context)
                         .textTheme
@@ -67,9 +69,9 @@ class _AuthScreenState extends State<AuthScreen>
             const SizedBox(height: defaultPadding * 2),
             TabBar(
               controller: _tabController,
-              tabs: const [
-                Tab(text: 'Login'),
-                Tab(text: 'Sign Up'),
+              tabs: [
+                Tab(text: l10n.login),
+                Tab(text: l10n.signUpTab),
               ],
               labelColor: primaryColor,
               unselectedLabelColor: Colors.grey,
@@ -93,6 +95,7 @@ class _AuthScreenState extends State<AuthScreen>
   Widget _buildLoginForm() {
     return Consumer<AuthProvider>(
       builder: (context, auth, _) {
+        final l10n = AppLocalizations.of(context);
         return SingleChildScrollView(
           padding: const EdgeInsets.all(defaultPadding),
           child: Form(
@@ -104,16 +107,16 @@ class _AuthScreenState extends State<AuthScreen>
                 TextFormField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(
-                    hintText: 'Email address',
-                    prefixIcon: Icon(Icons.email_outlined),
+                  decoration: InputDecoration(
+                    hintText: l10n.emailAddress,
+                    prefixIcon: const Icon(Icons.email_outlined),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter your email';
+                      return l10n.pleaseEnterYourEmail;
                     }
                     if (!value.contains('@')) {
-                      return 'Please enter a valid email';
+                      return l10n.pleaseEnterValidEmail;
                     }
                     return null;
                   },
@@ -123,7 +126,7 @@ class _AuthScreenState extends State<AuthScreen>
                   controller: _passwordController,
                   obscureText: _obscurePassword,
                   decoration: InputDecoration(
-                    hintText: 'Password',
+                    hintText: l10n.password,
                     prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
                       icon: Icon(_obscurePassword
@@ -136,10 +139,10 @@ class _AuthScreenState extends State<AuthScreen>
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter your password';
+                      return l10n.pleaseEnterYourPassword;
                     }
                     if (value.length < 6) {
-                      return 'Password must be at least 6 characters';
+                      return l10n.passwordMinChars;
                     }
                     return null;
                   },
@@ -151,7 +154,7 @@ class _AuthScreenState extends State<AuthScreen>
                     onPressed: () {
                       _showForgotPasswordDialog(context);
                     },
-                    child: const Text('Forgot password?'),
+                    child: Text(l10n.forgotPasswordQuestion),
                   ),
                 ),
                 const SizedBox(height: defaultPadding),
@@ -171,30 +174,31 @@ class _AuthScreenState extends State<AuthScreen>
                           width: 20,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Text('Login'),
+                      : Text(l10n.login),
                 ),
                 const SizedBox(height: defaultPadding * 2),
                 Row(
-                  children: const [
-                    Expanded(child: Divider()),
+                  children: [
+                    const Expanded(child: Divider()),
                     Padding(
-                      padding: EdgeInsets.symmetric(horizontal: defaultPadding),
-                      child: Text('OR'),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: defaultPadding),
+                      child: Text(l10n.or),
                     ),
-                    Expanded(child: Divider()),
+                    const Expanded(child: Divider()),
                   ],
                 ),
                 const SizedBox(height: defaultPadding),
                 SocialButton(
                   onPressed: () {},
                   icon: Icons.g_mobiledata,
-                  label: 'Continue with Google',
+                  label: l10n.continueWithGoogle,
                 ),
                 const SizedBox(height: defaultPadding),
                 SocialButton(
                   onPressed: () {},
                   icon: Icons.apple,
-                  label: 'Continue with Apple',
+                  label: l10n.continueWithApple,
                 ),
               ],
             ),
@@ -207,6 +211,7 @@ class _AuthScreenState extends State<AuthScreen>
   Widget _buildRegisterForm() {
     return Consumer<AuthProvider>(
       builder: (context, auth, _) {
+        final l10n = AppLocalizations.of(context);
         return SingleChildScrollView(
           padding: const EdgeInsets.all(defaultPadding),
           child: Form(
@@ -217,13 +222,13 @@ class _AuthScreenState extends State<AuthScreen>
                 const SizedBox(height: defaultPadding * 2),
                 TextFormField(
                   controller: _nameController,
-                  decoration: const InputDecoration(
-                    hintText: 'Full name',
-                    prefixIcon: Icon(Icons.person_outline),
+                  decoration: InputDecoration(
+                    hintText: l10n.fullName,
+                    prefixIcon: const Icon(Icons.person_outline),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter your name';
+                      return l10n.pleaseEnterYourName;
                     }
                     return null;
                   },
@@ -232,16 +237,16 @@ class _AuthScreenState extends State<AuthScreen>
                 TextFormField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(
-                    hintText: 'Email address',
-                    prefixIcon: Icon(Icons.email_outlined),
+                  decoration: InputDecoration(
+                    hintText: l10n.emailAddress,
+                    prefixIcon: const Icon(Icons.email_outlined),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter your email';
+                      return l10n.pleaseEnterYourEmail;
                     }
                     if (!value.contains('@')) {
-                      return 'Please enter a valid email';
+                      return l10n.pleaseEnterValidEmail;
                     }
                     return null;
                   },
@@ -250,9 +255,9 @@ class _AuthScreenState extends State<AuthScreen>
                 TextFormField(
                   controller: _phoneController,
                   keyboardType: TextInputType.phone,
-                  decoration: const InputDecoration(
-                    hintText: 'Phone number (optional)',
-                    prefixIcon: Icon(Icons.phone_outlined),
+                  decoration: InputDecoration(
+                    hintText: l10n.phoneNumberOptional,
+                    prefixIcon: const Icon(Icons.phone_outlined),
                   ),
                 ),
                 const SizedBox(height: defaultPadding),
@@ -260,7 +265,7 @@ class _AuthScreenState extends State<AuthScreen>
                   controller: _passwordController,
                   obscureText: _obscurePassword,
                   decoration: InputDecoration(
-                    hintText: 'Password',
+                    hintText: l10n.password,
                     prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
                       icon: Icon(_obscurePassword
@@ -273,10 +278,10 @@ class _AuthScreenState extends State<AuthScreen>
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter your password';
+                      return l10n.pleaseEnterYourPassword;
                     }
                     if (value.length < 6) {
-                      return 'Password must be at least 6 characters';
+                      return l10n.passwordMinChars;
                     }
                     return null;
                   },
@@ -298,7 +303,7 @@ class _AuthScreenState extends State<AuthScreen>
                           width: 20,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Text('Create Account'),
+                      : Text(l10n.createAccount),
                 ),
               ],
             ),
@@ -339,22 +344,23 @@ class _AuthScreenState extends State<AuthScreen>
   }
 
   void _showForgotPasswordDialog(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final emailController = TextEditingController();
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Reset Password'),
+        title: Text(l10n.resetPassword),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('Enter your email and we\'ll send you a reset link.'),
+            Text(l10n.translate('reset_password_instructions')),
             const SizedBox(height: defaultPadding),
             TextFormField(
               controller: emailController,
               keyboardType: TextInputType.emailAddress,
-              decoration: const InputDecoration(
-                hintText: 'Email address',
-                prefixIcon: Icon(Icons.email_outlined),
+              decoration: InputDecoration(
+                hintText: l10n.emailAddress,
+                prefixIcon: const Icon(Icons.email_outlined),
               ),
             ),
           ],
@@ -362,7 +368,7 @@ class _AuthScreenState extends State<AuthScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           ElevatedButton(
             onPressed: () {
@@ -371,12 +377,10 @@ class _AuthScreenState extends State<AuthScreen>
                   );
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Reset link sent to your email'),
-                ),
+                SnackBar(content: Text(l10n.resetLinkSent)),
               );
             },
-            child: const Text('Send'),
+            child: Text(l10n.send),
           ),
         ],
       ),

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:shop/models/booking_models.dart';
-import 'package:shop/services/api_service.dart';
+import 'package:munasabati/models/booking_models.dart';
+import 'package:munasabati/services/api_service_real.dart';
 
 class AuthProvider extends ChangeNotifier {
-  final ApiService _api = ApiService();
+  final ApiServiceReal _api = ApiServiceReal();
 
   UserModel? _user;
   UserModel? get user => _user;

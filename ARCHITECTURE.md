@@ -58,53 +58,57 @@
 ## 2. Technology Stack
 
 ### Frontend (Consumer)
-| Layer | Technology | Rationale |
-|-------|-----------|-----------|
-| Framework | Flutter 3.x | Cross-platform (iOS/Android/Web) from single codebase |
-| State Mgmt | Riverpod 2.x | Compile-safe, testable, scalable |
-| Navigation | GoRouter | Declarative routing, deep link support |
-| HTTP Client | Dio | Interceptors, retry, timeout handling |
-| Real-time | Socket.io Client | Live booking confirmations & availability |
-| Local Cache | Hive | Fast offline storage for preferences/bookmarks |
-| Maps | Google Maps SDK | Venue location display |
-| Calendar | table_calendar | Date/time slot selection |
-| Payments | flutter_stripe | Secure in-app payments |
+
+| Layer       | Technology       | Rationale                                             |
+| ----------- | ---------------- | ----------------------------------------------------- |
+| Framework   | Flutter 3.x      | Cross-platform (iOS/Android/Web) from single codebase |
+| State Mgmt  | Riverpod 2.x     | Compile-safe, testable, scalable                      |
+| Navigation  | GoRouter         | Declarative routing, deep link support                |
+| HTTP Client | Dio              | Interceptors, retry, timeout handling                 |
+| Real-time   | Socket.io Client | Live booking confirmations & availability             |
+| Local Cache | Hive             | Fast offline storage for preferences/bookmarks        |
+| Maps        | Google Maps SDK  | Venue location display                                |
+| Calendar    | table_calendar   | Date/time slot selection                              |
+| Payments    | flutter_stripe   | Secure in-app payments                                |
 
 ### Frontend (Provider Dashboard)
-| Layer | Technology | Rationale |
-|-------|-----------|-----------|
-| Framework | Flutter Web | Same codebase, responsive layout |
-| Charts | fl_chart | Booking analytics visualization |
-| Calendar | syncfusion_calendar | Availability management |
+
+| Layer     | Technology          | Rationale                        |
+| --------- | ------------------- | -------------------------------- |
+| Framework | Flutter Web         | Same codebase, responsive layout |
+| Charts    | fl_chart            | Booking analytics visualization  |
+| Calendar  | syncfusion_calendar | Availability management          |
 
 ### Backend
-| Layer | Technology | Rationale |
-|-------|-----------|-----------|
-| Runtime | Node.js 20 LTS | Non-blocking I/O, real-time capable |
-| Framework | Fastify | 2x faster than Express, schema validation |
-| Database | PostgreSQL 16 | ACID compliance, JSONB, full-text search |
-| ORM | Prisma | Type-safe queries, migrations, auto-generated types |
-| Cache | Redis 7 | Pub/Sub for real-time, slot locking, rate limiting |
-| Real-time | Socket.io | Bi-directional, auto-reconnect, rooms |
-| Auth | JWT + Refresh Tokens | Stateless auth, secure rotation |
-| Validation | Zod | Runtime type validation |
-| Payments | Stripe | PCI compliant, supports holds/captures |
-| Storage | AWS S3 | Image/document uploads |
-| Email | SendGrid | Transactional + marketing emails |
-| Push | Firebase Cloud Messaging | Mobile push notifications |
-| Search | Meilisearch | Fast fuzzy search for services |
-| Container | Docker + Docker Compose | Consistent deployment |
-| CI/CD | GitHub Actions | Automated testing + deployment |
+
+| Layer      | Technology               | Rationale                                           |
+| ---------- | ------------------------ | --------------------------------------------------- |
+| Runtime    | Node.js 20 LTS           | Non-blocking I/O, real-time capable                 |
+| Framework  | Fastify                  | 2x faster than Express, schema validation           |
+| Database   | PostgreSQL 16            | ACID compliance, JSONB, full-text search            |
+| ORM        | Prisma                   | Type-safe queries, migrations, auto-generated types |
+| Cache      | Redis 7                  | Pub/Sub for real-time, slot locking, rate limiting  |
+| Real-time  | Socket.io                | Bi-directional, auto-reconnect, rooms               |
+| Auth       | JWT + Refresh Tokens     | Stateless auth, secure rotation                     |
+| Validation | Zod                      | Runtime type validation                             |
+| Payments   | Stripe                   | PCI compliant, supports holds/captures              |
+| Storage    | AWS S3                   | Image/document uploads                              |
+| Email      | SendGrid                 | Transactional + marketing emails                    |
+| Push       | Firebase Cloud Messaging | Mobile push notifications                           |
+| Search     | Meilisearch              | Fast fuzzy search for services                      |
+| Container  | Docker + Docker Compose  | Consistent deployment                               |
+| CI/CD      | GitHub Actions           | Automated testing + deployment                      |
 
 ### Infrastructure
-| Layer | Technology | Rationale |
-|-------|-----------|-----------|
-| Hosting | AWS ECS / Railway | Scalable container orchestration |
-| CDN | CloudFront | Static asset delivery |
-| SSL | Let's Encrypt | Free TLS certificates |
-| Monitoring | Grafana + Prometheus | Metrics & alerting |
-| Logging | Loki + Promtail | Centralized log aggregation |
-| API Gateway | Kong | Rate limiting, auth proxy |
+
+| Layer       | Technology           | Rationale                        |
+| ----------- | -------------------- | -------------------------------- |
+| Hosting     | AWS ECS / Railway    | Scalable container orchestration |
+| CDN         | CloudFront           | Static asset delivery            |
+| SSL         | Let's Encrypt        | Free TLS certificates            |
+| Monitoring  | Grafana + Prometheus | Metrics & alerting               |
+| Logging     | Loki + Promtail      | Centralized log aggregation      |
+| API Gateway | Kong                 | Rate limiting, auth proxy        |
 
 ## 3. Database Schema
 
@@ -548,66 +552,73 @@ Consumer selects slot
 ## 5. API Design
 
 ### Authentication
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/v1/auth/register` | Register new user |
-| POST | `/api/v1/auth/login` | Login, returns JWT + refresh token |
-| POST | `/api/v1/auth/refresh` | Refresh access token |
-| POST | `/api/v1/auth/logout` | Invalidate refresh token |
-| POST | `/api/v1/auth/forgot-password` | Request password reset |
-| POST | `/api/v1/auth/reset-password` | Reset with token |
+
+| Method | Endpoint                       | Description                        |
+| ------ | ------------------------------ | ---------------------------------- |
+| POST   | `/api/v1/auth/register`        | Register new user                  |
+| POST   | `/api/v1/auth/login`           | Login, returns JWT + refresh token |
+| POST   | `/api/v1/auth/refresh`         | Refresh access token               |
+| POST   | `/api/v1/auth/logout`          | Invalidate refresh token           |
+| POST   | `/api/v1/auth/forgot-password` | Request password reset             |
+| POST   | `/api/v1/auth/reset-password`  | Reset with token                   |
 
 ### Services (Consumer)
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/v1/services` | List services (filter, sort, paginate) |
-| GET | `/api/v1/services/:id` | Service details |
-| GET | `/api/v1/services/:id/availability` | Get available slots for date range |
-| GET | `/api/v1/services/:id/reviews` | Service reviews |
-| GET | `/api/v1/services/search` | Full-text search |
+
+| Method | Endpoint                            | Description                            |
+| ------ | ----------------------------------- | -------------------------------------- |
+| GET    | `/api/v1/services`                  | List services (filter, sort, paginate) |
+| GET    | `/api/v1/services/:id`              | Service details                        |
+| GET    | `/api/v1/services/:id/availability` | Get available slots for date range     |
+| GET    | `/api/v1/services/:id/reviews`      | Service reviews                        |
+| GET    | `/api/v1/services/search`           | Full-text search                       |
 
 ### Bookings (Consumer)
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/v1/bookings` | Create booking with items |
-| GET | `/api/v1/bookings` | List user's bookings |
-| GET | `/api/v1/bookings/:id` | Booking details |
-| PATCH | `/api/v1/bookings/:id` | Update booking |
-| POST | `/api/v1/bookings/:id/cancel` | Cancel booking |
-| POST | `/api/v1/bookings/:id/confirm` | Confirm pending booking |
+
+| Method | Endpoint                       | Description               |
+| ------ | ------------------------------ | ------------------------- |
+| POST   | `/api/v1/bookings`             | Create booking with items |
+| GET    | `/api/v1/bookings`             | List user's bookings      |
+| GET    | `/api/v1/bookings/:id`         | Booking details           |
+| PATCH  | `/api/v1/bookings/:id`         | Update booking            |
+| POST   | `/api/v1/bookings/:id/cancel`  | Cancel booking            |
+| POST   | `/api/v1/bookings/:id/confirm` | Confirm pending booking   |
 
 ### Payments
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/v1/payments/create-intent` | Create Stripe PaymentIntent |
-| POST | `/api/v1/payments/confirm` | Confirm payment |
-| POST | `/api/v1/payments/webhook` | Stripe webhook handler |
-| GET | `/api/v1/payments/history` | Payment history |
+
+| Method | Endpoint                         | Description                 |
+| ------ | -------------------------------- | --------------------------- |
+| POST   | `/api/v1/payments/create-intent` | Create Stripe PaymentIntent |
+| POST   | `/api/v1/payments/confirm`       | Confirm payment             |
+| POST   | `/api/v1/payments/webhook`       | Stripe webhook handler      |
+| GET    | `/api/v1/payments/history`       | Payment history             |
 
 ### Provider Dashboard
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/v1/provider/dashboard` | Dashboard stats |
-| GET | `/api/v1/provider/bookings` | Incoming bookings |
-| PATCH | `/api/v1/provider/bookings/:id/status` | Accept/reject booking |
-| CRUD | `/api/v1/provider/services` | Manage services |
-| CRUD | `/api/v1/provider/availability` | Manage availability |
-| CRUD | `/api/v1/provider/pricing-rules` | Manage pricing |
-| GET | `/api/v1/provider/analytics` | Booking analytics |
+
+| Method | Endpoint                               | Description           |
+| ------ | -------------------------------------- | --------------------- |
+| GET    | `/api/v1/provider/dashboard`           | Dashboard stats       |
+| GET    | `/api/v1/provider/bookings`            | Incoming bookings     |
+| PATCH  | `/api/v1/provider/bookings/:id/status` | Accept/reject booking |
+| CRUD   | `/api/v1/provider/services`            | Manage services       |
+| CRUD   | `/api/v1/provider/availability`        | Manage availability   |
+| CRUD   | `/api/v1/provider/pricing-rules`       | Manage pricing        |
+| GET    | `/api/v1/provider/analytics`           | Booking analytics     |
 
 ### WebSocket Events
-| Event | Direction | Description |
-|-------|-----------|-------------|
-| `booking:created` | Server → Provider | New booking request |
-| `booking:confirmed` | Server → Consumer | Booking confirmed |
-| `booking:cancelled` | Server → Both | Booking cancelled |
-| `slot:locked` | Server → All | Slot temporarily locked |
-| `slot:released` | Server → All | Slot lock released |
-| `payment:received` | Server → Provider | Payment confirmed |
+
+| Event               | Direction         | Description             |
+| ------------------- | ----------------- | ----------------------- |
+| `booking:created`   | Server → Provider | New booking request     |
+| `booking:confirmed` | Server → Consumer | Booking confirmed       |
+| `booking:cancelled` | Server → Both     | Booking cancelled       |
+| `slot:locked`       | Server → All      | Slot temporarily locked |
+| `slot:released`     | Server → All      | Slot lock released      |
+| `payment:received`  | Server → Provider | Payment confirmed       |
 
 ## 6. Step-by-Step Implementation Plan
 
 ### Phase 1: Foundation (Weeks 1-2)
+
 1. Set up Flutter project structure (reusing existing e-commerce UI)
 2. Configure Riverpod state management
 3. Create data models (Dart classes mirroring DB schema)
@@ -617,6 +628,7 @@ Consumer selects slot
 7. Implement JWT storage and refresh token rotation
 
 ### Phase 2: Core Consumer Experience (Weeks 3-5)
+
 8. Build home screen with service categories
 9. Implement service listing with filters (type, price, rating, location)
 10. Build service detail screen (gallery, pricing, reviews, availability)
@@ -627,6 +639,7 @@ Consumer selects slot
 15. Build booking confirmation screen with real-time updates
 
 ### Phase 3: Provider Dashboard (Weeks 6-7)
+
 16. Build provider dashboard overview (stats, charts)
 17. Implement booking calendar (accept/reject/manage)
 18. Build service management (CRUD, images, pricing)
@@ -634,6 +647,7 @@ Consumer selects slot
 20. Build pricing rules editor (seasonal, weekend, bulk)
 
 ### Phase 4: Backend Development (Weeks 3-8, parallel)
+
 21. Set up Node.js + Fastify project structure
 22. Configure Prisma with PostgreSQL schema
 23. Implement auth service (register, login, JWT, refresh)
@@ -646,6 +660,7 @@ Consumer selects slot
 30. Implement notification service (email, push, in-app)
 
 ### Phase 5: Polish & Production (Weeks 9-10)
+
 31. Implement user preferences & personalization
 32. Build review system
 33. Add bookmark/favorite functionality
@@ -681,3 +696,64 @@ Consumer selects slot
 - **Search**: Meilisearch separate from primary DB
 - **WebSocket**: Redis adapter for multi-instance Socket.io
 - **Monitoring**: Prometheus metrics, Grafana dashboards, PagerDuty alerts
+
+## 9. Flutter Frontend Implementation Status
+
+### ✅ Completed (Phase 1 - Core UI & Models)
+
+| Component            | File                                                   | Status      |
+| -------------------- | ------------------------------------------------------ | ----------- |
+| Data Models          | `lib/models/booking_models.dart`                       | ✅ Complete |
+| Demo Data            | `lib/models/demo_booking_data.dart`                    | ✅ Complete |
+| Booking Home         | `lib/screens/booking/booking_home_screen.dart`         | ✅ Complete |
+| Service Listing      | `lib/screens/booking/service_listing_screen.dart`      | ✅ Complete |
+| Service Detail       | `lib/screens/booking/service_detail_screen.dart`       | ✅ Complete |
+| Date/Time Picker     | `lib/screens/booking/date_time_picker_screen.dart`     | ✅ Complete |
+| Booking Cart         | `lib/screens/booking/booking_cart_screen.dart`         | ✅ Complete |
+| Booking Confirmation | `lib/screens/booking/booking_confirmation_screen.dart` | ✅ Complete |
+| Booking Success      | `lib/screens/booking/booking_success_screen.dart`      | ✅ Complete |
+| My Bookings          | `lib/screens/booking/my_bookings_screen.dart`          | ✅ Complete |
+| Booking Detail       | `lib/screens/booking/booking_detail_screen.dart`       | ✅ Complete |
+| Provider Dashboard   | `lib/screens/booking/provider_dashboard_screen.dart`   | ✅ Complete |
+| State Management     | `lib/services/booking_provider.dart`                   | ✅ Complete |
+
+### ✅ Completed (Phase 2 - Enhanced Architecture)
+
+| Component                  | File                                                          | Status             |
+| -------------------------- | ------------------------------------------------------------- | ------------------ |
+| API Service Layer          | `lib/services/api_service.dart`                               | ✅ Complete (mock) |
+| Auth Provider              | `lib/services/auth_provider.dart`                             | ✅ Complete        |
+| Auth Screen (Login/Signup) | `lib/screens/booking/auth_screen.dart`                        | ✅ Complete        |
+| Search Screen              | `lib/screens/booking/booking_search_screen.dart`              | ✅ Complete        |
+| Notifications Screen       | `lib/screens/booking/booking_notifications_screen.dart`       | ✅ Complete        |
+| Reviews Screen             | `lib/screens/booking/booking_reviews_screen.dart`             | ✅ Complete        |
+| Bookmarks Screen           | `lib/screens/booking/booking_bookmarks_screen.dart`           | ✅ Complete        |
+| Provider Availability      | `lib/screens/booking/provider_availability_screen.dart`       | ✅ Complete        |
+| Provider Service Mgmt      | `lib/screens/booking/provider_service_management_screen.dart` | ✅ Complete        |
+| Provider Pricing Rules     | `lib/screens/booking/provider_pricing_rules_screen.dart`      | ✅ Complete        |
+| User Preferences           | `lib/screens/booking/user_preferences_screen.dart`            | ✅ Complete        |
+| Pricing Rules Model        | `PricingRuleModel` in booking_models.dart                     | ✅ Complete        |
+| Availability Templates     | `AvailabilityTemplateModel` in booking_models.dart            | ✅ Complete        |
+| Cancellation Policy        | `CancellationPolicy` in booking_models.dart                   | ✅ Complete        |
+| Auth Tokens                | `AuthTokens` in booking_models.dart                           | ✅ Complete        |
+| API Response Wrapper       | `ApiResponse<T>` in booking_models.dart                       | ✅ Complete        |
+| Dashboard Stats            | `ProviderDashboardStats` in booking_models.dart               | ✅ Complete        |
+| Dynamic Pricing            | `ServiceModel.getEffectivePrice()`                            | ✅ Complete        |
+| Booking Model copyWith     | `BookingModel.copyWith()`                                     | ✅ Complete        |
+| Route Constants            | 10 new routes added                                           | ✅ Complete        |
+| Localization (EN/AR)       | 55+ new keys added                                            | ✅ Complete        |
+
+### 🔲 Pending (Phase 3 - Backend Integration)
+
+| Component                                   | Status                              |
+| ------------------------------------------- | ----------------------------------- |
+| Dio HTTP Client + Interceptors              | 🔲 Replace mock with real Dio calls |
+| JWT Secure Storage (flutter_secure_storage) | 🔲 Implement                        |
+| WebSocket Client (Socket.io)                | 🔲 Real-time booking updates        |
+| Stripe Payment SDK                          | 🔲 Payment flow integration         |
+| Push Notifications (Firebase)               | 🔲 FCM integration                  |
+| Image Upload (Provider)                     | 🔲 Service photo management         |
+| Deep Linking                                | 🔲 Share service/booking links      |
+| Offline Mode (Hive/Isar)                    | 🔲 Cache for offline access         |
+| Analytics (Mixpanel/Firebase)               | 🔲 Event tracking                   |
+| CI/CD Pipeline                              | 🔲 GitHub Actions + Fastlane        |

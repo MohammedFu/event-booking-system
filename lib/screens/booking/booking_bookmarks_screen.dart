@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:shop/constants.dart';
-import 'package:shop/models/booking_models.dart';
-import 'package:shop/models/demo_booking_data.dart';
-import 'package:shop/services/booking_provider.dart';
-import 'package:shop/route/route_constants.dart' as routes;
+import 'package:munasabati/constants.dart';
+import 'package:munasabati/models/booking_models.dart';
+import 'package:munasabati/models/demo_booking_data.dart';
+import 'package:munasabati/services/booking_provider.dart';
+import 'package:munasabati/route/route_constants.dart' as routes;
 import 'package:provider/provider.dart';
 
 class BookingBookmarksScreen extends StatelessWidget {

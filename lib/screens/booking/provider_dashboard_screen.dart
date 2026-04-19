@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:shop/constants.dart';
-import 'package:shop/models/booking_models.dart';
-import 'package:shop/models/demo_booking_data.dart';
+import 'package:munasabati/constants.dart';
+import 'package:munasabati/models/booking_models.dart';
+import 'package:munasabati/models/demo_booking_data.dart';
 
 class ProviderDashboardScreen extends StatelessWidget {
   const ProviderDashboardScreen({super.key});

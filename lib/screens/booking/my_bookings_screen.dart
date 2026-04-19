@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:shop/constants.dart';
-import 'package:shop/models/booking_models.dart';
-import 'package:shop/route/route_constants.dart';
-import 'package:shop/services/booking_provider.dart';
+import 'package:munasabati/constants.dart';
+import 'package:munasabati/models/booking_models.dart';
+import 'package:munasabati/route/route_constants.dart';
+import 'package:munasabati/services/booking_provider.dart';
 import 'package:provider/provider.dart';
 
 class MyBookingsScreen extends StatefulWidget {

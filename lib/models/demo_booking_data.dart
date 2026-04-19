@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:shop/models/booking_models.dart';
+import 'package:munasabati/models/booking_models.dart';
 
 // Demo data for UI development
 

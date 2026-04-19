@@ -155,6 +155,185 @@ class AppLocalizations {
   String get selectLanguage => translate('select_language');
   String get english => translate('english');
   String get arabic => translate('arabic');
+
+  // Auth screens
+  String get login => translate('login');
+  String get signUpTab => translate('sign_up_tab');
+  String get emailAddress => translate('email_address');
+  String get password => translate('password');
+  String get createAccount => translate('create_account');
+  String get resetPassword => translate('reset_password');
+  String get continueWithGoogle => translate('continue_with_google');
+  String get continueWithApple => translate('continue_with_apple');
+  String get or => translate('or');
+  String get fullName => translate('full_name');
+  String get phoneNumberOptional => translate('phone_number');
+
+  String get eventBookerAppName => translate('eventbooker_app_name');
+  String get eventBookerTagline => translate('eventbooker_tagline');
+  String get forgotPasswordQuestion => translate('forgot_password_question');
+  String get send => translate('send');
+  String get resetLinkSent => translate('reset_link_sent');
+  String get pleaseEnterYourEmail => translate('please_enter_your_email');
+  String get pleaseEnterValidEmail => translate('please_enter_valid_email');
+  String get pleaseEnterYourPassword => translate('please_enter_your_password');
+  String get passwordMinChars => translate('password_min_chars');
+  String get pleaseEnterYourName => translate('please_enter_your_name');
+
+  String get eventDetails => translate('event_details');
+  String get eventName => translate('event_name');
+  String get eventNameExample => translate('event_name_example');
+  String get bookingSummary => translate('booking_summary');
+  String get depositDueNow => translate('deposit_due_now');
+  String get paymentMethod => translate('payment_method');
+  String get creditDebitCard => translate('credit_debit_card');
+  String get cardBrands => translate('card_brands');
+  String get bankTransfer => translate('bank_transfer');
+  String get directBankTransfer => translate('direct_bank_transfer');
+  String get walletLabel => translate('wallet');
+  String get payFromWalletBalance => translate('pay_from_wallet_balance');
+  String confirmAndPayDeposit(String amount) =>
+      translate('confirm_and_pay_deposit', params: {'amount': amount});
+
+  String get pricingRules => translate('pricing_rules');
+  String pricingRulesForService(String service) =>
+      translate('pricing_rules_for_service', params: {'service': service});
+  String get addPricingRule => translate('add_pricing_rule');
+  String increasesPriceByPercent(String percent) =>
+      translate('increases_price_by_percent', params: {'percent': percent});
+  String decreasesPriceByPercent(String percent) =>
+      translate('decreases_price_by_percent', params: {'percent': percent});
+  String get noChange => translate('no_change');
+  String fixedAdjustmentValue(String value) =>
+      translate('fixed_adjustment_value', params: {'value': value});
+  String get fixedAdjustmentPlaceholder =>
+      translate('fixed_adjustment_placeholder');
+  String dateRangeShort(String start, String end) =>
+      translate('date_range_short', params: {'start': start, 'end': end});
+  String minDaysAdvance(String days) =>
+      translate('min_days_advance', params: {'days': days});
+
+  // Home / Search
+  String get searchHallsCars => translate('search_halls_cars');
+  String get categories => translate('categories');
+  String get popularSearches => translate('popular_searches');
+  String get eventHalls => translate('event_halls');
+  String get carsLimos => translate('cars_limos');
+  String get photographers => translate('photographers');
+  String get entertainers => translate('entertainers');
+
+  // Reviews
+  String get writeAReview => translate('write_a_review');
+  String get shareYourExperience => translate('share_your_experience');
+  String get submit => translate('submit');
+  String get savedServices => translate('saved_services');
+  String get noSavedServices => translate('no_saved_services');
+  String get bookmarkServicesHint => translate('bookmark_services_hint');
+
+  // Provider / Services
+  String get myServices => translate('my_services');
+  String get availability => translate('availability');
+  String get pricing => translate('pricing');
+  String get saveChanges => translate('save_changes');
+  String get addRule => translate('add_rule');
+  String get ruleType => translate('rule_type');
+  String get priceMultiplier => translate('price_multiplier');
+  String get fixedAdjustment => translate('fixed_adjustment');
+  String get noPricingRules => translate('no_pricing_rules');
+  String get addRulesHint => translate('add_rules_hint');
+
+  // Preferences
+  String get myPreferences => translate('my_preferences');
+  String get preferredHallThemes => translate('preferred_hall_themes');
+  String get preferredCarTypes => translate('preferred_car_types');
+  String get photographyStyles => translate('photography_styles');
+  String get entertainerTypes => translate('entertainer_types');
+  String get preferredCities => translate('preferred_cities');
+  String get budgetRange => translate('budget_range');
+  String get savePreferences => translate('save_preferences');
+
+  // Notifications
+  String get markAllRead => translate('mark_all_read');
+  String get noNotifications => translate('no_notifications');
+  String get bookingConfirmedNotif => translate('booking_confirmed_notif');
+  String get paymentReceived => translate('payment_received');
+  String get upcomingEvent => translate('upcoming_event');
+  String get leaveReview => translate('leave_review');
+  String get specialOffer => translate('special_offer');
+
+  // Booking Home
+  String helloUser(String name) =>
+      translate('hello_user', params: {'name': name});
+  String get planDreamEvent => translate('plan_dream_event');
+  String get bookPerfectEvent => translate('book_perfect_event');
+  String get everythingOnePlace => translate('everything_one_place');
+  String get popularServices => translate('popular_services');
+  String get seeAll => translate('see_all');
+  String get featuredHalls => translate('featured_halls');
+  String get halls => translate('halls');
+  String get cars => translate('cars');
+  String get photos => translate('photos');
+  String get entertainment => translate('entertainment');
+  String get dashboard => translate('dashboard');
+
+  // Booking Cart
+  String get bookingCart => translate('booking_cart');
+  String get yourCartEmpty => translate('your_cart_empty');
+  String get browseServicesDesc => translate('browse_services_desc');
+  String get browseServices => translate('browse_services');
+  String get addMore => translate('add_more');
+  String get proceedToBook => translate('proceed_to_book');
+  String get clearCart => translate('clear_cart');
+  String get clearCartConfirm => translate('clear_cart_confirm');
+  String get depositPercent => translate('deposit_percent');
+  String get preferencesSaved => translate('preferences_saved');
+
+  // Service Detail
+  String get verified => translate('verified');
+  String get about => translate('about');
+  String get noDescription => translate('no_description');
+  String get price => translate('price');
+  String get capacity => translate('capacity');
+  String get guests => translate('guests');
+  String get featuresDetails => translate('features_details');
+  String get serviceProvider => translate('service_provider');
+  String get cancellationPolicy => translate('cancellation_policy');
+  String get flatRate => translate('flat_rate');
+  String get perEvent => translate('per_event');
+  String get tieredPricing => translate('tiered_pricing');
+  String get stageAvailable => translate('stage_available');
+  String get parking => translate('parking');
+  String get kitchen => translate('kitchen');
+  String get editingIncluded => translate('editing_included');
+  String get passengers => translate('passengers');
+  String get performers => translate('performers');
+
+  // Service Listing
+  String get allServices => translate('all_services');
+  String get noServicesFound => translate('no_services_found');
+  String get all => translate('all');
+  String get topRated => translate('top_rated');
+  String get priceLow => translate('price_low');
+  String get priceHigh => translate('price_high');
+  String get mostReviewed => translate('most_reviewed');
+  String get weddingCars => translate('wedding_cars');
+
+  // Provider Service Management
+  String get serviceCreationForm => translate('service_creation_form');
+  String get noServicesYet => translate('no_services_yet');
+  String get tapToAddFirstService => translate('tap_to_add_first_service');
+
+  // Onboarding
+  String get onboardingTitle1 => translate('onboarding_title_1');
+  String get onboardingDesc1 => translate('onboarding_desc_1');
+  String get onboardingTitle2 => translate('onboarding_title_2');
+  String get onboardingDesc2 => translate('onboarding_desc_2');
+  String get onboardingTitle3 => translate('onboarding_title_3');
+  String get onboardingDesc3 => translate('onboarding_desc_3');
+  String get onboardingTitle4 => translate('onboarding_title_4');
+  String get onboardingDesc4 => translate('onboarding_desc_4');
+  String get onboardingTitle5 => translate('onboarding_title_5');
+  String get onboardingDesc5 => translate('onboarding_desc_5');
 }
 
 class _AppLocalizationsDelegate

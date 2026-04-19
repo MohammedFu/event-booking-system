@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:shop/constants.dart';
-import 'package:shop/models/booking_models.dart';
-import 'package:shop/services/api_service.dart';
+import 'package:munasabati/constants.dart';
+import 'package:munasabati/models/booking_models.dart';
+import 'package:munasabati/services/api_service_real.dart';
 
 class ProviderAvailabilityScreen extends StatefulWidget {
   final String serviceId;
@@ -20,7 +20,7 @@ class ProviderAvailabilityScreen extends StatefulWidget {
 
 class _ProviderAvailabilityScreenState
     extends State<ProviderAvailabilityScreen> {
-  final ApiService _api = ApiService();
+  final ApiServiceReal _api = ApiServiceReal();
   List<AvailabilityTemplateModel> _templates = [];
   bool _isLoading = true;
 
@@ -51,7 +51,8 @@ class _ProviderAvailabilityScreenState
           : ListView.separated(
               padding: const EdgeInsets.all(defaultPadding),
               itemCount: _templates.length,
-              separatorBuilder: (_, __) => const SizedBox(height: defaultPadding / 2),
+              separatorBuilder: (_, __) =>
+                  const SizedBox(height: defaultPadding / 2),
               itemBuilder: (context, index) {
                 final template = _templates[index];
                 return _AvailabilityCard(
@@ -190,7 +191,8 @@ class _AvailabilityCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isUnavailable = !template.isAvailable;
     return Card(
-      color: isUnavailable ? Theme.of(context).cardColor.withOpacity(0.5) : null,
+      color:
+          isUnavailable ? Theme.of(context).cardColor.withOpacity(0.5) : null,
       child: ListTile(
         leading: CircleAvatar(
           backgroundColor: template.isAvailable

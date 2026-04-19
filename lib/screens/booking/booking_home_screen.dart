@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:shop/constants.dart';
-import 'package:shop/models/booking_models.dart';
-import 'package:shop/models/demo_booking_data.dart';
-import 'package:shop/route/route_constants.dart' as routes;
-import 'package:shop/services/booking_provider.dart';
+import 'package:munasabati/constants.dart';
+import 'package:munasabati/l10n/app_localizations.dart';
+import 'package:munasabati/models/booking_models.dart';
+import 'package:munasabati/models/demo_booking_data.dart';
+import 'package:munasabati/route/route_constants.dart' as routes;
+import 'package:munasabati/services/booking_provider.dart';
 import 'package:provider/provider.dart';
 
 class BookingHomeScreen extends StatelessWidget {
@@ -22,7 +23,7 @@ class BookingHomeScreen extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(
                     defaultPadding, defaultPadding, defaultPadding, 8),
                 child: Text(
-                  'Book Your Perfect Event',
+                  AppLocalizations.of(context).bookPerfectEvent,
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -34,7 +35,7 @@ class BookingHomeScreen extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(
                     horizontal: defaultPadding, vertical: 8),
                 child: Text(
-                  'Everything you need in one place',
+                  AppLocalizations.of(context).everythingOnePlace,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Theme.of(context)
                             .textTheme
@@ -46,6 +47,7 @@ class BookingHomeScreen extends StatelessWidget {
               ),
             ),
             SliverToBoxAdapter(child: _buildServiceCategories(context)),
+            SliverToBoxAdapter(child: _buildQuickActions(context)),
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(
@@ -54,7 +56,7 @@ class BookingHomeScreen extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Popular Services',
+                      AppLocalizations.of(context).popularServices,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                           ),
@@ -64,7 +66,7 @@ class BookingHomeScreen extends StatelessWidget {
                         Navigator.pushNamed(
                             context, routes.serviceListingScreenRoute);
                       },
-                      child: const Text('See All'),
+                      child: Text(AppLocalizations.of(context).seeAll),
                     ),
                   ],
                 ),
@@ -105,7 +107,7 @@ class BookingHomeScreen extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Featured Halls',
+                      AppLocalizations.of(context).featuredHalls,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                           ),
@@ -118,7 +120,7 @@ class BookingHomeScreen extends StatelessWidget {
                           arguments: ServiceType.hall,
                         );
                       },
-                      child: const Text('See All'),
+                      child: Text(AppLocalizations.of(context).seeAll),
                     ),
                   ],
                 ),
@@ -170,14 +172,14 @@ class BookingHomeScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Hello, Sarah! 👋',
+                  AppLocalizations.of(context).helloUser('علي'),
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Plan your dream event',
+                  AppLocalizations.of(context).planDreamEvent,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Theme.of(context)
                             .textTheme
@@ -191,7 +193,14 @@ class BookingHomeScreen extends StatelessWidget {
           ),
           IconButton(
             onPressed: () {
-              Navigator.pushNamed(context, routes.notificationsScreenRoute);
+              Navigator.pushNamed(context, routes.bookingBookmarksScreenRoute);
+            },
+            icon: const Icon(Icons.bookmark_outline),
+          ),
+          IconButton(
+            onPressed: () {
+              Navigator.pushNamed(
+                  context, routes.bookingNotificationsScreenRoute);
             },
             icon: const Icon(Icons.notifications_outlined),
           ),
@@ -241,10 +250,10 @@ class BookingHomeScreen extends StatelessWidget {
       child: TextField(
         readOnly: true,
         onTap: () {
-          Navigator.pushNamed(context, routes.searchScreenRoute);
+          Navigator.pushNamed(context, routes.bookingSearchScreenRoute);
         },
         decoration: InputDecoration(
-          hintText: 'Search halls, cars, photographers...',
+          hintText: AppLocalizations.of(context).searchHallsCars,
           prefixIcon: const Icon(Icons.search),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(defaultBorderRadious),
@@ -263,25 +272,25 @@ class BookingHomeScreen extends StatelessWidget {
     final categories = [
       _CategoryItem(
         icon: Icons.domain,
-        label: 'Halls',
+        label: AppLocalizations.of(context).halls,
         color: const Color(0xFF7B61FF),
         type: ServiceType.hall,
       ),
       _CategoryItem(
         icon: Icons.directions_car,
-        label: 'Cars',
+        label: AppLocalizations.of(context).cars,
         color: const Color(0xFF2ED573),
         type: ServiceType.car,
       ),
       _CategoryItem(
         icon: Icons.camera_alt,
-        label: 'Photos',
+        label: AppLocalizations.of(context).photos,
         color: const Color(0xFFFFBE21),
         type: ServiceType.photographer,
       ),
       _CategoryItem(
         icon: Icons.music_note,
-        label: 'Entertainment',
+        label: AppLocalizations.of(context).entertainment,
         color: const Color(0xFFEA5B5B),
         type: ServiceType.entertainer,
       ),
@@ -323,6 +332,64 @@ class BookingHomeScreen extends StatelessWidget {
           );
         }).toList(),
       ),
+    );
+  }
+
+  Widget _buildQuickActions(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(defaultPadding, 16, defaultPadding, 0),
+      child: Row(
+        children: [
+          Expanded(
+            child: _QuickActionChip(
+              icon: Icons.receipt_long,
+              label: AppLocalizations.of(context).myBookings,
+              onTap: () =>
+                  Navigator.pushNamed(context, routes.myBookingsScreenRoute),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: _QuickActionChip(
+              icon: Icons.tune,
+              label: AppLocalizations.of(context).preferences,
+              onTap: () => Navigator.pushNamed(
+                  context, routes.userPreferencesScreenRoute),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: _QuickActionChip(
+              icon: Icons.business_center,
+              label: AppLocalizations.of(context).dashboard,
+              onTap: () => Navigator.pushNamed(
+                  context, routes.providerDashboardScreenRoute),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _QuickActionChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _QuickActionChip({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ActionChip(
+      onPressed: onTap,
+      avatar: Icon(icon, size: 16),
+      label: Text(label, style: Theme.of(context).textTheme.bodySmall),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
     );
   }
 }

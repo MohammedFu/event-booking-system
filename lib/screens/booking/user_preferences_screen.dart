@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:shop/constants.dart';
-import 'package:shop/models/booking_models.dart';
-import 'package:shop/services/api_service.dart';
+import 'package:munasabati/constants.dart';
+import 'package:munasabati/l10n/app_localizations.dart';
+import 'package:munasabati/models/booking_models.dart';
+import 'package:munasabati/services/api_service_real.dart';
 
 class UserPreferencesScreen extends StatefulWidget {
   const UserPreferencesScreen({super.key});
@@ -11,16 +12,44 @@ class UserPreferencesScreen extends StatefulWidget {
 }
 
 class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
-  final ApiService _api = ApiService();
+  final ApiServiceReal _api = ApiServiceReal();
   UserPreferences _preferences = const UserPreferences();
   bool _isLoading = true;
 
-  final _hallThemes = ['Modern', 'Classic', 'Rustic', 'Garden', 'Beach', 'Industrial'];
+  final _hallThemes = [
+    'Modern',
+    'Classic',
+    'Rustic',
+    'Garden',
+    'Beach',
+    'Industrial'
+  ];
   final _carTypes = ['Luxury', 'Vintage', 'Sports', 'SUV', 'Limo', 'Classic'];
-  final _photoStyles = ['Documentary', 'Traditional', 'Fine Art', 'Editorial', 'Dark & Moody', 'Light & Airy'];
-  final _entertainerTypes = ['DJ', 'Live Band', 'Singer', 'Dancer', 'Comedian', 'Magician'];
-  final _cities = ['New York', 'Los Angeles', 'Chicago', 'Miami', 'Las Vegas', 'San Francisco'];
-  final _budgetRanges = [
+  final _photoStyles = [
+    'Documentary',
+    'Traditional',
+    'Fine Art',
+    'Editorial',
+    'Dark & Moody',
+    'Light & Airy'
+  ];
+  final _entertainerTypes = [
+    'DJ',
+    'Live Band',
+    'Singer',
+    'Dancer',
+    'Comedian',
+    'Magician'
+  ];
+  final _cities = [
+    'New York',
+    'Los Angeles',
+    'Chicago',
+    'Miami',
+    'Las Vegas',
+    'San Francisco'
+  ];
+  final _budgetRanges = const [
     BudgetRange(min: 0, max: 5000),
     BudgetRange(min: 5000, max: 15000),
     BudgetRange(min: 15000, max: 30000),
@@ -50,7 +79,7 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Preferences'),
+        title: Text(AppLocalizations.of(context).myPreferences),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -60,7 +89,7 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildChipSection(
-                    'Preferred Hall Themes',
+                    AppLocalizations.of(context).preferredHallThemes,
                     _hallThemes,
                     _preferences.preferredHallThemes,
                     (selected) {
@@ -68,8 +97,10 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
                         _preferences = UserPreferences(
                           preferredHallThemes: selected,
                           preferredCarTypes: _preferences.preferredCarTypes,
-                          preferredPhotographerStyles: _preferences.preferredPhotographerStyles,
-                          preferredEntertainerTypes: _preferences.preferredEntertainerTypes,
+                          preferredPhotographerStyles:
+                              _preferences.preferredPhotographerStyles,
+                          preferredEntertainerTypes:
+                              _preferences.preferredEntertainerTypes,
                           budgetRange: _preferences.budgetRange,
                           preferredCities: _preferences.preferredCities,
                         );
@@ -77,7 +108,7 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
                     },
                   ),
                   _buildChipSection(
-                    'Preferred Car Types',
+                    AppLocalizations.of(context).preferredCarTypes,
                     _carTypes,
                     _preferences.preferredCarTypes,
                     (selected) {
@@ -85,8 +116,10 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
                         _preferences = UserPreferences(
                           preferredHallThemes: _preferences.preferredHallThemes,
                           preferredCarTypes: selected,
-                          preferredPhotographerStyles: _preferences.preferredPhotographerStyles,
-                          preferredEntertainerTypes: _preferences.preferredEntertainerTypes,
+                          preferredPhotographerStyles:
+                              _preferences.preferredPhotographerStyles,
+                          preferredEntertainerTypes:
+                              _preferences.preferredEntertainerTypes,
                           budgetRange: _preferences.budgetRange,
                           preferredCities: _preferences.preferredCities,
                         );
@@ -94,7 +127,7 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
                     },
                   ),
                   _buildChipSection(
-                    'Photography Styles',
+                    AppLocalizations.of(context).photographyStyles,
                     _photoStyles,
                     _preferences.preferredPhotographerStyles,
                     (selected) {
@@ -103,7 +136,8 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
                           preferredHallThemes: _preferences.preferredHallThemes,
                           preferredCarTypes: _preferences.preferredCarTypes,
                           preferredPhotographerStyles: selected,
-                          preferredEntertainerTypes: _preferences.preferredEntertainerTypes,
+                          preferredEntertainerTypes:
+                              _preferences.preferredEntertainerTypes,
                           budgetRange: _preferences.budgetRange,
                           preferredCities: _preferences.preferredCities,
                         );
@@ -111,7 +145,7 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
                     },
                   ),
                   _buildChipSection(
-                    'Entertainer Types',
+                    AppLocalizations.of(context).entertainerTypes,
                     _entertainerTypes,
                     _preferences.preferredEntertainerTypes,
                     (selected) {
@@ -119,7 +153,8 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
                         _preferences = UserPreferences(
                           preferredHallThemes: _preferences.preferredHallThemes,
                           preferredCarTypes: _preferences.preferredCarTypes,
-                          preferredPhotographerStyles: _preferences.preferredPhotographerStyles,
+                          preferredPhotographerStyles:
+                              _preferences.preferredPhotographerStyles,
                           preferredEntertainerTypes: selected,
                           budgetRange: _preferences.budgetRange,
                           preferredCities: _preferences.preferredCities,
@@ -128,7 +163,7 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
                     },
                   ),
                   _buildChipSection(
-                    'Preferred Cities',
+                    AppLocalizations.of(context).preferredCities,
                     _cities,
                     _preferences.preferredCities,
                     (selected) {
@@ -136,8 +171,10 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
                         _preferences = UserPreferences(
                           preferredHallThemes: _preferences.preferredHallThemes,
                           preferredCarTypes: _preferences.preferredCarTypes,
-                          preferredPhotographerStyles: _preferences.preferredPhotographerStyles,
-                          preferredEntertainerTypes: _preferences.preferredEntertainerTypes,
+                          preferredPhotographerStyles:
+                              _preferences.preferredPhotographerStyles,
+                          preferredEntertainerTypes:
+                              _preferences.preferredEntertainerTypes,
                           budgetRange: _preferences.budgetRange,
                           preferredCities: selected,
                         );
@@ -145,7 +182,7 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
                     },
                   ),
                   const SizedBox(height: defaultPadding),
-                  Text('Budget Range',
+                  Text(AppLocalizations.of(context).budgetRange,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                           )),
@@ -154,8 +191,9 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
                     spacing: defaultPadding / 2,
                     runSpacing: defaultPadding / 2,
                     children: _budgetRanges.map((range) {
-                      final isSelected = _preferences.budgetRange.min == range.min &&
-                          _preferences.budgetRange.max == range.max;
+                      final isSelected =
+                          _preferences.budgetRange.min == range.min &&
+                              _preferences.budgetRange.max == range.max;
                       return ChoiceChip(
                         label: Text(range.max == double.infinity
                             ? '\$${range.min.toStringAsFixed(0)}+'
@@ -164,10 +202,13 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
                         onSelected: (_) {
                           setState(() {
                             _preferences = UserPreferences(
-                              preferredHallThemes: _preferences.preferredHallThemes,
+                              preferredHallThemes:
+                                  _preferences.preferredHallThemes,
                               preferredCarTypes: _preferences.preferredCarTypes,
-                              preferredPhotographerStyles: _preferences.preferredPhotographerStyles,
-                              preferredEntertainerTypes: _preferences.preferredEntertainerTypes,
+                              preferredPhotographerStyles:
+                                  _preferences.preferredPhotographerStyles,
+                              preferredEntertainerTypes:
+                                  _preferences.preferredEntertainerTypes,
                               budgetRange: range,
                               preferredCities: _preferences.preferredCities,
                             );
@@ -182,11 +223,13 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
                       await _api.updateUserPreferences(_preferences);
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Preferences saved')),
+                          SnackBar(
+                              content: Text(AppLocalizations.of(context)
+                                  .preferencesSaved)),
                         );
                       }
                     },
-                    child: const Text('Save Preferences'),
+                    child: Text(AppLocalizations.of(context).savePreferences),
                   ),
                 ],
               ),

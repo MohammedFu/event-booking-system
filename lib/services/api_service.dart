@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:shop/models/booking_models.dart';
-import 'package:shop/models/demo_booking_data.dart';
+import 'package:munasabati/models/booking_models.dart';
+import 'package:munasabati/models/demo_booking_data.dart';
 
 // API service layer with mock responses for development.
 // When backend is ready, swap mock implementations with real Dio calls.

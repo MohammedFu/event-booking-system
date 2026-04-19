@@ -1,10 +1,10 @@
 import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:shop/constants.dart';
-import 'package:shop/l10n/app_localizations.dart';
-import 'package:shop/route/route_constants.dart';
-import 'package:shop/route/screen_export.dart';
+import 'package:munasabati/constants.dart';
+import 'package:munasabati/l10n/app_localizations.dart';
+import 'package:munasabati/route/route_constants.dart';
+import 'package:munasabati/route/screen_export.dart';
 
 class EntryPoint extends StatefulWidget {
   const EntryPoint({super.key});
@@ -18,7 +18,6 @@ class _EntryPointState extends State<EntryPoint> {
     BookingHomeScreen(),
     DiscoverScreen(),
     BookmarkScreen(),
-    CartScreen(),
     ProfileScreen(),
   ];
   int _currentIndex = 0;
@@ -126,11 +125,6 @@ class _EntryPointState extends State<EntryPoint> {
               activeIcon:
                   svgIcon("assets/icons/Bookmark.svg", color: primaryColor),
               label: AppLocalizations.of(context).bookmark,
-            ),
-            BottomNavigationBarItem(
-              icon: svgIcon("assets/icons/Bag.svg"),
-              activeIcon: svgIcon("assets/icons/Bag.svg", color: primaryColor),
-              label: AppLocalizations.of(context).cart,
             ),
             BottomNavigationBarItem(
               icon: svgIcon("assets/icons/Profile.svg"),

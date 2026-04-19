@@ -1,8 +1,8 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:shop/l10n/app_localizations.dart';
-import 'package:shop/screens/auth/views/components/sign_up_form.dart';
-import 'package:shop/route/route_constants.dart';
+import 'package:munasabati/l10n/app_localizations.dart';
+import 'package:munasabati/screens/auth/views/components/sign_up_form.dart';
+import 'package:munasabati/route/route_constants.dart';
 
 import '../../../constants.dart';
 

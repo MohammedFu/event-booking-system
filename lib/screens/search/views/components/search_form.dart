@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:shop/theme/input_decoration_theme.dart';
+import 'package:munasabati/l10n/app_localizations.dart';
+import 'package:munasabati/theme/input_decoration_theme.dart';
 
 class SearchForm extends StatelessWidget {
   const SearchForm({
@@ -27,6 +28,7 @@ class SearchForm extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Form(
       child: TextFormField(
         autofocus: autofocus,
@@ -38,7 +40,7 @@ class SearchForm extends StatelessWidget {
         validator: validator,
         textInputAction: TextInputAction.search,
         decoration: InputDecoration(
-          hintText: "Find something...",
+          hintText: l10n.findSomething,
           filled: false,
           border: secodaryOutlineInputBorder(context),
           enabledBorder: secodaryOutlineInputBorder(context),

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:shop/constants.dart';
-import 'package:shop/route/route_constants.dart';
-import 'package:shop/services/booking_provider.dart';
+import 'package:munasabati/constants.dart';
+import 'package:munasabati/l10n/app_localizations.dart';
+import 'package:munasabati/models/booking_models.dart';
+import 'package:munasabati/route/route_constants.dart';
+import 'package:munasabati/services/booking_provider.dart';
 import 'package:provider/provider.dart';
 
 class BookingCartScreen extends StatelessWidget {
@@ -11,7 +13,7 @@ class BookingCartScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Booking Cart'),
+        title: Text(AppLocalizations.of(context).bookingCart),
         actions: [
           Consumer<BookingProvider>(
             builder: (context, provider, _) {
@@ -20,7 +22,7 @@ class BookingCartScreen extends StatelessWidget {
                 onPressed: () {
                   _showClearCartDialog(context, provider);
                 },
-                child: const Text('Clear'),
+                child: Text(AppLocalizations.of(context).clear),
               );
             },
           ),
@@ -37,12 +39,12 @@ class BookingCartScreen extends StatelessWidget {
                       size: 80, color: Colors.grey.withOpacity(0.5)),
                   const SizedBox(height: 16),
                   Text(
-                    'Your booking cart is empty',
+                    AppLocalizations.of(context).yourCartEmpty,
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Browse services and add them to your cart',
+                    AppLocalizations.of(context).browseServicesDesc,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: Theme.of(context)
                               .textTheme
@@ -56,7 +58,7 @@ class BookingCartScreen extends StatelessWidget {
                     onPressed: () {
                       Navigator.pushNamed(context, bookingHomeScreenRoute);
                     },
-                    child: const Text('Browse Services'),
+                    child: Text(AppLocalizations.of(context).browseServices),
                   ),
                 ],
               ),
@@ -108,7 +110,8 @@ class BookingCartScreen extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Subtotal', style: Theme.of(context).textTheme.bodyMedium),
+                Text(AppLocalizations.of(context).subtotal,
+                    style: Theme.of(context).textTheme.bodyMedium),
                 Text('\$${provider.cartTotal.toInt()}',
                     style: Theme.of(context).textTheme.bodyMedium),
               ],
@@ -117,7 +120,7 @@ class BookingCartScreen extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Deposit (25%)',
+                Text(AppLocalizations.of(context).depositPercent,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: const Color(0xFF2ED573),
                         )),
@@ -131,7 +134,7 @@ class BookingCartScreen extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Total',
+                Text(AppLocalizations.of(context).total,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         )),
@@ -151,7 +154,7 @@ class BookingCartScreen extends StatelessWidget {
                       Navigator.pushNamed(context, bookingHomeScreenRoute);
                     },
                     icon: const Icon(Icons.add),
-                    label: const Text('Add More'),
+                    label: Text(AppLocalizations.of(context).addMore),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
@@ -168,7 +171,7 @@ class BookingCartScreen extends StatelessWidget {
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
-                    child: const Text('Proceed to Book'),
+                    child: Text(AppLocalizations.of(context).proceedToBook),
                   ),
                 ),
               ],
@@ -183,20 +186,20 @@ class BookingCartScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Clear Cart'),
-        content: const Text(
-            'Are you sure you want to remove all items from your booking cart?'),
+        title: Text(AppLocalizations.of(context).clearCart),
+        content: Text(AppLocalizations.of(context).clearCartConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context).cancel),
           ),
           TextButton(
             onPressed: () {
               provider.clearCart();
               Navigator.pop(context);
             },
-            child: const Text('Clear', style: TextStyle(color: errorColor)),
+            child: Text(AppLocalizations.of(context).clear,
+                style: const TextStyle(color: errorColor)),
           ),
         ],
       ),

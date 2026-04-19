@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:shop/entry_point.dart';
-import 'package:shop/models/booking_models.dart';
+import 'package:munasabati/entry_point.dart';
+import 'package:munasabati/models/booking_models.dart';
 
 import 'screen_export.dart';
 
@@ -65,6 +65,10 @@ import 'screen_export.dart';
 
 Route<dynamic> generateRoute(RouteSettings settings) {
   switch (settings.name) {
+    case splashScreenRoute:
+      return MaterialPageRoute(
+        builder: (context) => const SplashScreen(),
+      );
     case onbordingScreenRoute:
       return MaterialPageRoute(
         builder: (context) => const OnBordingScreen(),
@@ -129,17 +133,18 @@ Route<dynamic> generateRoute(RouteSettings settings) {
     //   return MaterialPageRoute(
     //     builder: (context) => const SetupFaceIdScreen(),
     //   );
-    case productDetailsScreenRoute:
-      return MaterialPageRoute(
-        builder: (context) {
-          bool isProductAvailable = settings.arguments as bool? ?? true;
-          return ProductDetailsScreen(isProductAvailable: isProductAvailable);
-        },
-      );
-    case productReviewsScreenRoute:
-      return MaterialPageRoute(
-        builder: (context) => const ProductReviewsScreen(),
-      );
+    // Shopping routes commented out - converting to booking-only app
+    // case productDetailsScreenRoute:
+    //   return MaterialPageRoute(
+    //     builder: (context) {
+    //       bool isProductAvailable = settings.arguments as bool? ?? true;
+    //       return ProductDetailsScreen(isProductAvailable: isProductAvailable);
+    //     },
+    //   );
+    // case productReviewsScreenRoute:
+    //   return MaterialPageRoute(
+    //     builder: (context) => const ProductReviewsScreen(),
+    //   );
     // case addReviewsScreenRoute:
     //   return MaterialPageRoute(
     //     builder: (context) => const AddReviewScreen(),
@@ -164,14 +169,15 @@ Route<dynamic> generateRoute(RouteSettings settings) {
       return MaterialPageRoute(
         builder: (context) => const DiscoverScreen(),
       );
-    case onSaleScreenRoute:
-      return MaterialPageRoute(
-        builder: (context) => const OnSaleScreen(),
-      );
-    case kidsScreenRoute:
-      return MaterialPageRoute(
-        builder: (context) => const KidsScreen(),
-      );
+    // Shopping routes commented out - converting to booking-only app
+    // case onSaleScreenRoute:
+    //   return MaterialPageRoute(
+    //     builder: (context) => const OnSaleScreen(),
+    //   );
+    // case kidsScreenRoute:
+    //   return MaterialPageRoute(
+    //     builder: (context) => const KidsScreen(),
+    //   );
     case searchScreenRoute:
       return MaterialPageRoute(
         builder: (context) => const SearchScreen(),
@@ -244,10 +250,11 @@ Route<dynamic> generateRoute(RouteSettings settings) {
     //   return MaterialPageRoute(
     //     builder: (context) => const AddNewAddressScreen(),
     //   );
-    case ordersScreenRoute:
-      return MaterialPageRoute(
-        builder: (context) => const OrdersScreen(),
-      );
+    // Shopping orders routes commented out - converting to booking-only app
+    // case ordersScreenRoute:
+    //   return MaterialPageRoute(
+    //     builder: (context) => const OrdersScreen(),
+    //   );
     // case orderProcessingScreenRoute:
     //   return MaterialPageRoute(
     //     builder: (context) => const OrderProcessingScreen(),
@@ -284,10 +291,11 @@ Route<dynamic> generateRoute(RouteSettings settings) {
       return MaterialPageRoute(
         builder: (context) => const WalletScreen(),
       );
-    case cartScreenRoute:
-      return MaterialPageRoute(
-        builder: (context) => const CartScreen(),
-      );
+    // Shopping cart route commented out - converting to booking-only app
+    // case cartScreenRoute:
+    //   return MaterialPageRoute(
+    //     builder: (context) => const CartScreen(),
+    //   );
     // case paymentMethodScreenRoute:
     //   return MaterialPageRoute(
     //     builder: (context) => const PaymentMethodScreen(),

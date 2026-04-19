@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:shop/constants.dart';
-import 'package:shop/models/booking_models.dart';
-import 'package:shop/services/api_service.dart';
+import 'package:munasabati/constants.dart';
+import 'package:munasabati/models/booking_models.dart';
+import 'package:munasabati/services/api_service_real.dart';
 
 class BookingNotificationsScreen extends StatefulWidget {
   const BookingNotificationsScreen({super.key});
@@ -13,7 +13,7 @@ class BookingNotificationsScreen extends StatefulWidget {
 
 class _BookingNotificationsScreenState
     extends State<BookingNotificationsScreen> {
-  final ApiService _api = ApiService();
+  final ApiServiceReal _api = ApiServiceReal();
   List<NotificationModel> _notifications = [];
   bool _isLoading = true;
 

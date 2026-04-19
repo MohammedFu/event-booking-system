@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:shop/components/buy_full_ui_kit.dart';
-import 'package:shop/l10n/app_localizations.dart';
+import 'package:munasabati/components/buy_full_ui_kit.dart';
+import 'package:munasabati/l10n/app_localizations.dart';
 
 class NotificationsScreen extends StatelessWidget {
   const NotificationsScreen({super.key});

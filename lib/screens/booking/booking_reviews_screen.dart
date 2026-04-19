@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:shop/constants.dart';
-import 'package:shop/models/booking_models.dart';
-import 'package:shop/services/api_service.dart';
+import 'package:munasabati/constants.dart';
+import 'package:munasabati/models/booking_models.dart';
+import 'package:munasabati/services/api_service_real.dart';
 
 class BookingReviewsScreen extends StatefulWidget {
   final String serviceId;
@@ -18,7 +18,7 @@ class BookingReviewsScreen extends StatefulWidget {
 }
 
 class _BookingReviewsScreenState extends State<BookingReviewsScreen> {
-  final ApiService _api = ApiService();
+  final ApiServiceReal _api = ApiServiceReal();
   List<ReviewModel> _reviews = [];
   bool _isLoading = true;
   double _averageRating = 0;
@@ -53,8 +53,7 @@ class _BookingReviewsScreenState extends State<BookingReviewsScreen> {
           : CustomScrollView(
               slivers: [
                 SliverToBoxAdapter(child: _buildRatingSummary()),
-                const SliverToBoxAdapter(
-                    child: Divider(height: 1)),
+                const SliverToBoxAdapter(child: Divider(height: 1)),
                 SliverPadding(
                   padding: const EdgeInsets.all(defaultPadding),
                   sliver: SliverList(
@@ -98,11 +97,15 @@ class _BookingReviewsScreenState extends State<BookingReviewsScreen> {
               ),
               const SizedBox(height: 4),
               Row(
-                children: List.generate(5, (i) => Icon(
-                  i < _averageRating.round() ? Icons.star : Icons.star_border,
-                  size: 16,
-                  color: Colors.amber,
-                )),
+                children: List.generate(
+                    5,
+                    (i) => Icon(
+                          i < _averageRating.round()
+                              ? Icons.star
+                              : Icons.star_border,
+                          size: 16,
+                          color: Colors.amber,
+                        )),
               ),
               const SizedBox(height: 4),
               Text('${_reviews.length} reviews',
@@ -166,13 +169,16 @@ class _BookingReviewsScreenState extends State<BookingReviewsScreen> {
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(5, (i) => IconButton(
-                  onPressed: () => setDialogState(() => selectedRating = i + 1),
-                  icon: Icon(
-                    i < selectedRating ? Icons.star : Icons.star_border,
-                    color: Colors.amber,
-                  ),
-                )),
+                children: List.generate(
+                    5,
+                    (i) => IconButton(
+                          onPressed: () =>
+                              setDialogState(() => selectedRating = i + 1),
+                          icon: Icon(
+                            i < selectedRating ? Icons.star : Icons.star_border,
+                            color: Colors.amber,
+                          ),
+                        )),
               ),
               const SizedBox(height: defaultPadding),
               TextField(
@@ -203,9 +209,9 @@ class _BookingReviewsScreenState extends State<BookingReviewsScreen> {
                       if (response.success && response.data != null) {
                         setState(() {
                           _reviews.insert(0, response.data!);
-                          _averageRating = _reviews.fold(0.0,
-                                  (sum, r) => sum + r.rating) /
-                              _reviews.length;
+                          _averageRating =
+                              _reviews.fold(0.0, (sum, r) => sum + r.rating) /
+                                  _reviews.length;
                         });
                       }
                       if (context.mounted) Navigator.pop(context);
@@ -261,11 +267,13 @@ class _ReviewCard extends StatelessWidget {
                   ),
                 ),
                 Row(
-                  children: List.generate(5, (i) => Icon(
-                    i < review.rating ? Icons.star : Icons.star_border,
-                    size: 16,
-                    color: Colors.amber,
-                  )),
+                  children: List.generate(
+                      5,
+                      (i) => Icon(
+                            i < review.rating ? Icons.star : Icons.star_border,
+                            size: 16,
+                            color: Colors.amber,
+                          )),
                 ),
               ],
             ),

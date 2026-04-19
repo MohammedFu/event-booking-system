@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:shop/components/buy_full_ui_kit.dart';
+import 'package:munasabati/components/buy_full_ui_kit.dart';
 
 class EnableNotificationScreen extends StatelessWidget {
   const EnableNotificationScreen({super.key});

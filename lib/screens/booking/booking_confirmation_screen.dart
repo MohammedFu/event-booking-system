@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:shop/constants.dart';
-import 'package:shop/l10n/app_localizations.dart';
-import 'package:shop/route/route_constants.dart';
-import 'package:shop/services/booking_provider.dart';
+import 'package:munasabati/constants.dart';
+import 'package:munasabati/l10n/app_localizations.dart';
+import 'package:munasabati/route/route_constants.dart';
+import 'package:munasabati/services/booking_provider.dart';
 import 'package:provider/provider.dart';
 
 class BookingConfirmationScreen extends StatefulWidget {
@@ -27,13 +27,14 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<BookingProvider>();
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context).confirmBooking),
+        title: Text(l10n.confirmBooking),
       ),
       body: provider.cartItems.isEmpty
-          ? Center(child: Text(AppLocalizations.of(context).noItemsInCart))
+          ? Center(child: Text(l10n.noItemsInCart))
           : Column(
               children: [
                 Expanded(
@@ -59,11 +60,12 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
   }
 
   Widget _buildEventDetails(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Event Details',
+          l10n.eventDetails,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
@@ -72,8 +74,8 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
         TextField(
           controller: _eventNameController,
           decoration: InputDecoration(
-            labelText: 'Event Name',
-            hintText: 'e.g., Sarah & James Wedding',
+            labelText: l10n.eventName,
+            hintText: l10n.eventNameExample,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(defaultBorderRadious),
             ),
@@ -84,17 +86,22 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
         DropdownButtonFormField<String>(
           value: _eventType,
           decoration: InputDecoration(
-            labelText: 'Event Type',
+            labelText: l10n.eventType,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(defaultBorderRadious),
             ),
           ),
-          items: const [
-            DropdownMenuItem(value: 'wedding', child: Text('Wedding')),
-            DropdownMenuItem(value: 'engagement', child: Text('Engagement')),
-            DropdownMenuItem(value: 'birthday', child: Text('Birthday')),
-            DropdownMenuItem(value: 'corporate', child: Text('Corporate')),
-            DropdownMenuItem(value: 'other', child: Text('Other')),
+          items: [
+            DropdownMenuItem(
+                value: 'wedding', child: Text(l10n.translate('wedding'))),
+            DropdownMenuItem(
+                value: 'engagement', child: Text(l10n.translate('engagement'))),
+            DropdownMenuItem(
+                value: 'birthday', child: Text(l10n.translate('birthday'))),
+            DropdownMenuItem(
+                value: 'corporate', child: Text(l10n.translate('corporate'))),
+            DropdownMenuItem(
+                value: 'other', child: Text(l10n.translate('other'))),
           ],
           onChanged: (val) {
             if (val != null) setState(() => _eventType = val);
@@ -105,11 +112,12 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
   }
 
   Widget _buildBookingSummary(BuildContext context, BookingProvider provider) {
+    final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Booking Summary',
+          l10n.bookingSummary,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
@@ -169,7 +177,7 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Total',
+            Text(l10n.total,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     )),
@@ -184,7 +192,7 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Deposit due now (25%)',
+            Text(l10n.depositDueNow,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: const Color(0xFF2ED573),
                     )),
@@ -200,11 +208,12 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
   }
 
   Widget _buildPaymentSection(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Payment Method',
+          l10n.paymentMethod,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
@@ -212,22 +221,25 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
         const SizedBox(height: 12),
         _PaymentOption(
           icon: Icons.credit_card,
-          label: 'Credit/Debit Card',
-          subtitle: 'Visa, Mastercard, Amex',
+          value: 'card',
+          label: l10n.creditDebitCard,
+          subtitle: l10n.cardBrands,
           selected: _paymentMethod == 'card',
           onTap: () => setState(() => _paymentMethod = 'card'),
         ),
         _PaymentOption(
           icon: Icons.account_balance,
-          label: 'Bank Transfer',
-          subtitle: 'Direct bank transfer',
+          value: 'bank_transfer',
+          label: l10n.bankTransfer,
+          subtitle: l10n.directBankTransfer,
           selected: _paymentMethod == 'bank_transfer',
           onTap: () => setState(() => _paymentMethod = 'bank_transfer'),
         ),
         _PaymentOption(
           icon: Icons.account_balance_wallet,
-          label: 'Wallet',
-          subtitle: 'Pay from wallet balance',
+          value: 'wallet',
+          label: l10n.walletLabel,
+          subtitle: l10n.payFromWalletBalance,
           selected: _paymentMethod == 'wallet',
           onTap: () => setState(() => _paymentMethod = 'wallet'),
         ),
@@ -236,6 +248,7 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
   }
 
   Widget _buildConfirmButton(BuildContext context, BookingProvider provider) {
+    final l10n = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.all(defaultPadding),
       decoration: BoxDecoration(
@@ -269,7 +282,10 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
                 child: Text(
-                    'Confirm & Pay \$${(provider.cartTotal * 0.25).toInt()} Deposit'),
+                  l10n.confirmAndPayDeposit(
+                    '\$${(provider.cartTotal * 0.25).toInt()}',
+                  ),
+                ),
               ),
       ),
     );
@@ -278,6 +294,7 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
 
 class _PaymentOption extends StatelessWidget {
   final IconData icon;
+  final String value;
   final String label;
   final String subtitle;
   final bool selected;
@@ -285,6 +302,7 @@ class _PaymentOption extends StatelessWidget {
 
   const _PaymentOption({
     required this.icon,
+    required this.value,
     required this.label,
     required this.subtitle,
     required this.selected,
@@ -329,8 +347,8 @@ class _PaymentOption extends StatelessWidget {
               ),
             ),
             Radio<String>(
-              value: label,
-              groupValue: selected ? label : '',
+              value: value,
+              groupValue: selected ? value : '',
               onChanged: (_) => onTap(),
               activeColor: primaryColor,
             ),

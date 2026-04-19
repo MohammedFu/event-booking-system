@@ -1,17 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
-import 'package:shop/l10n/app_localizations.dart';
-import 'package:shop/l10n/locale_provider.dart';
-import 'package:shop/route/route_constants.dart';
-import 'package:shop/route/router.dart' as router;
-import 'package:shop/services/booking_provider.dart';
-import 'package:shop/theme/app_theme.dart';
+import 'package:munasabati/l10n/app_localizations.dart';
+import 'package:munasabati/l10n/locale_provider.dart';
+import 'package:munasabati/route/route_constants.dart';
+import 'package:munasabati/route/router.dart' as router;
+import 'package:munasabati/services/auth_provider.dart';
+import 'package:munasabati/services/booking_provider.dart';
+import 'package:munasabati/services/dio_client.dart';
+import 'package:munasabati/theme/app_theme.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  dioClient.initialize();
+
   runApp(
     MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => BookingProvider()),
         ChangeNotifierProvider(create: (_) => LocaleProvider()),
       ],
@@ -32,7 +38,7 @@ class MyApp extends StatelessWidget {
     final localeProvider = Provider.of<LocaleProvider>(context);
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Shop Template by The Flutter Way',
+      title: 'مناسباتي',
       theme: AppTheme.lightTheme(context),
       // Dark theme is inclided in the Full template
       themeMode: ThemeMode.light,
@@ -48,7 +54,7 @@ class MyApp extends StatelessWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       onGenerateRoute: router.generateRoute,
-      initialRoute: onbordingScreenRoute,
+      initialRoute: splashScreenRoute,
     );
   }
 }

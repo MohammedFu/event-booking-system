@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:shop/constants.dart';
-import 'package:shop/models/booking_models.dart';
-import 'package:shop/models/demo_booking_data.dart';
-import 'package:shop/route/route_constants.dart' as routes;
+import 'package:munasabati/constants.dart';
+import 'package:munasabati/l10n/app_localizations.dart';
+import 'package:munasabati/models/booking_models.dart';
+import 'package:munasabati/models/demo_booking_data.dart';
+import 'package:munasabati/route/route_constants.dart' as routes;
 
 class ProviderServiceManagementScreen extends StatefulWidget {
   const ProviderServiceManagementScreen({super.key});
@@ -31,17 +32,18 @@ class _ProviderServiceManagementScreenState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Services'),
+        title: Text(l10n.myServices),
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true,
-          tabs: const [
-            Tab(text: 'Halls'),
-            Tab(text: 'Cars'),
-            Tab(text: 'Photos'),
-            Tab(text: 'Entertainers'),
+          tabs: [
+            Tab(text: l10n.halls),
+            Tab(text: l10n.cars),
+            Tab(text: l10n.photos),
+            Tab(text: l10n.entertainers),
           ],
           labelColor: primaryColor,
           unselectedLabelColor: Colors.grey,
@@ -65,19 +67,19 @@ class _ProviderServiceManagementScreenState
   }
 
   void _showAddServiceDialog(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final typeIndex = _tabController.index;
     final serviceType = ServiceType.values[typeIndex];
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Add ${serviceType.name.toUpperCase()} Service'),
-        content: const Text(
-            'Service creation form will be available after backend integration.'),
+        title: Text('${l10n.addService} ${serviceType.name.toUpperCase()}'),
+        content: Text(l10n.serviceCreationForm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
+            child: Text(l10n.ok),
           ),
         ],
       ),
@@ -92,6 +94,7 @@ class _ServiceListTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     if (services.isEmpty) {
       return Center(
         child: Column(
@@ -100,10 +103,10 @@ class _ServiceListTab extends StatelessWidget {
             Icon(Icons.add_business,
                 size: 64, color: Theme.of(context).disabledColor),
             const SizedBox(height: defaultPadding),
-            Text('No services yet',
+            Text(l10n.noServicesYet,
                 style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: defaultPadding / 2),
-            Text('Tap + to add your first service',
+            Text(l10n.tapToAddFirstService,
                 style: Theme.of(context).textTheme.bodySmall),
           ],
         ),
@@ -129,6 +132,7 @@ class _ServiceManagementCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(defaultPadding),
@@ -168,7 +172,7 @@ class _ServiceManagementCard extends StatelessWidget {
                       ?.copyWith(color: primaryColor),
                 ),
                 if (service.pricingModel == PricingModel.hourly)
-                  Text('/hr',
+                  Text(l10n.perHour,
                       style: Theme.of(context).textTheme.bodySmall),
               ],
             ),
@@ -176,13 +180,16 @@ class _ServiceManagementCard extends StatelessWidget {
               const SizedBox(height: defaultPadding / 2),
               Wrap(
                 spacing: 4,
-                children: service.pricingRules.map((rule) => Chip(
-                  avatar: Icon(rule.ruleTypeIcon, size: 14),
-                  label: Text(rule.ruleTypeLabel,
-                      style: const TextStyle(fontSize: 10)),
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  padding: EdgeInsets.zero,
-                )).toList(),
+                children: service.pricingRules
+                    .map((rule) => Chip(
+                          avatar: Icon(rule.ruleTypeIcon, size: 14),
+                          label: Text(rule.ruleTypeLabel,
+                              style: const TextStyle(fontSize: 10)),
+                          materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
+                          padding: EdgeInsets.zero,
+                        ))
+                    .toList(),
               ),
             ],
             const Divider(height: defaultPadding),
@@ -198,7 +205,7 @@ class _ServiceManagementCard extends StatelessWidget {
                     );
                   },
                   icon: const Icon(Icons.schedule, size: 16),
-                  label: const Text('Availability'),
+                  label: Text(l10n.availability),
                 ),
                 const SizedBox(width: defaultPadding / 2),
                 TextButton.icon(
@@ -209,14 +216,14 @@ class _ServiceManagementCard extends StatelessWidget {
                       arguments: service,
                     );
                   },
-                  icon: const Icon(Icons.attach_money, size: 16),
-                  label: const Text('Pricing'),
+                  icon: const Icon(Icons.trending_up, size: 16),
+                  label: Text(l10n.pricing),
                 ),
                 const SizedBox(width: defaultPadding / 2),
                 IconButton(
                   onPressed: () {},
                   icon: const Icon(Icons.edit_outlined, size: 18),
-                  tooltip: 'Edit',
+                  tooltip: l10n.edit,
                 ),
               ],
             ),

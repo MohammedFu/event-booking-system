@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:shop/constants.dart';
-import 'package:shop/models/booking_models.dart';
+import 'package:munasabati/constants.dart';
+import 'package:munasabati/models/booking_models.dart';
 
 class BookingDetailScreen extends StatelessWidget {
   final BookingModel booking;

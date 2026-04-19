@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:shop/constants.dart';
-import 'package:shop/models/booking_models.dart';
-import 'package:shop/services/api_service.dart';
+import 'package:munasabati/constants.dart';
+import 'package:munasabati/l10n/app_localizations.dart';
+import 'package:munasabati/models/booking_models.dart';
+import 'package:munasabati/services/api_service_real.dart';
 
 class ProviderPricingRulesScreen extends StatefulWidget {
   final ServiceModel service;
@@ -15,7 +16,7 @@ class ProviderPricingRulesScreen extends StatefulWidget {
 
 class _ProviderPricingRulesScreenState
     extends State<ProviderPricingRulesScreen> {
-  final ApiService _api = ApiService();
+  final ApiServiceReal _api = ApiServiceReal();
   List<PricingRuleModel> _rules = [];
   bool _isLoading = true;
 
@@ -37,9 +38,10 @@ class _ProviderPricingRulesScreenState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text('${widget.service.title} - Pricing Rules'),
+        title: Text(l10n.pricingRulesForService(widget.service.title)),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -51,10 +53,10 @@ class _ProviderPricingRulesScreenState
                       Icon(Icons.local_offer,
                           size: 64, color: Theme.of(context).disabledColor),
                       const SizedBox(height: defaultPadding),
-                      Text('No pricing rules',
+                      Text(l10n.noPricingRules,
                           style: Theme.of(context).textTheme.titleMedium),
                       const SizedBox(height: defaultPadding / 2),
-                      Text('Add rules for dynamic pricing',
+                      Text(l10n.addRulesHint,
                           style: Theme.of(context).textTheme.bodySmall),
                     ],
                   ),
@@ -75,6 +77,7 @@ class _ProviderPricingRulesScreenState
   }
 
   void _showAddRuleDialog(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     PricingRuleType selectedType = PricingRuleType.weekend;
     double multiplier = 1.0;
     double fixedAdjustment = 0;
@@ -83,7 +86,7 @@ class _ProviderPricingRulesScreenState
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Add Pricing Rule'),
+          title: Text(l10n.addPricingRule),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -91,8 +94,7 @@ class _ProviderPricingRulesScreenState
               children: [
                 DropdownButtonFormField<PricingRuleType>(
                   value: selectedType,
-                  decoration:
-                      const InputDecoration(labelText: 'Rule Type'),
+                  decoration: InputDecoration(labelText: l10n.ruleType),
                   items: PricingRuleType.values
                       .map((t) => DropdownMenuItem(
                             value: t,
@@ -112,7 +114,7 @@ class _ProviderPricingRulesScreenState
                   },
                 ),
                 const SizedBox(height: defaultPadding),
-                Text('Price Multiplier',
+                Text(l10n.priceMultiplier,
                     style: Theme.of(context).textTheme.bodySmall),
                 Slider(
                   value: multiplier,
@@ -120,15 +122,18 @@ class _ProviderPricingRulesScreenState
                   max: 3.0,
                   divisions: 25,
                   label: '${multiplier.toStringAsFixed(2)}x',
-                  onChanged: (val) =>
-                      setDialogState(() => multiplier = val),
+                  onChanged: (val) => setDialogState(() => multiplier = val),
                 ),
                 Text(
                   multiplier > 1
-                      ? 'Increases price by ${((multiplier - 1) * 100).toStringAsFixed(0)}%'
+                      ? l10n.increasesPriceByPercent(
+                          ((multiplier - 1) * 100).toStringAsFixed(0),
+                        )
                       : multiplier < 1
-                          ? 'Decreases price by ${((1 - multiplier) * 100).toStringAsFixed(0)}%'
-                          : 'No change',
+                          ? l10n.decreasesPriceByPercent(
+                              ((1 - multiplier) * 100).toStringAsFixed(0),
+                            )
+                          : l10n.noChange,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: multiplier > 1 ? Colors.red : Colors.green,
                       ),
@@ -136,9 +141,9 @@ class _ProviderPricingRulesScreenState
                 const SizedBox(height: defaultPadding),
                 TextFormField(
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'Fixed Adjustment (\$)',
-                    hintText: '0.00',
+                  decoration: InputDecoration(
+                    labelText: l10n.fixedAdjustment,
+                    hintText: l10n.fixedAdjustmentPlaceholder,
                   ),
                   onChanged: (val) {
                     final parsed = double.tryParse(val);
@@ -153,7 +158,7 @@ class _ProviderPricingRulesScreenState
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
+              child: Text(l10n.cancel),
             ),
             ElevatedButton(
               onPressed: () async {
@@ -168,7 +173,7 @@ class _ProviderPricingRulesScreenState
                 setState(() => _rules.add(rule));
                 if (context.mounted) Navigator.pop(context);
               },
-              child: const Text('Add Rule'),
+              child: Text(l10n.addRule),
             ),
           ],
         ),
@@ -201,6 +206,7 @@ class _PricingRuleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final isDiscount = rule.multiplier < 1;
     return Card(
       child: ListTile(
@@ -236,11 +242,20 @@ class _PricingRuleCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (rule.fixedAdjustment != 0)
-              Text('Fixed: ${rule.fixedAdjustment > 0 ? '+' : ''}\$${rule.fixedAdjustment.toStringAsFixed(2)}'),
+              Text(
+                l10n.fixedAdjustmentValue(
+                  '${rule.fixedAdjustment > 0 ? '+' : ''}\$${rule.fixedAdjustment.toStringAsFixed(2)}',
+                ),
+              ),
             if (rule.startDate != null && rule.endDate != null)
-              Text('${rule.startDate!.month}/${rule.startDate!.day} - ${rule.endDate!.month}/${rule.endDate!.day}'),
+              Text(
+                l10n.dateRangeShort(
+                  '${rule.startDate!.month}/${rule.startDate!.day}',
+                  '${rule.endDate!.month}/${rule.endDate!.day}',
+                ),
+              ),
             if (rule.minAdvanceDays != null)
-              Text('Min ${rule.minAdvanceDays} days advance'),
+              Text(l10n.minDaysAdvance(rule.minAdvanceDays.toString())),
           ],
         ),
         trailing: Switch(

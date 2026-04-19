@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:shop/constants.dart';
-import 'package:shop/models/booking_models.dart';
-import 'package:shop/route/route_constants.dart';
-import 'package:shop/services/booking_provider.dart';
+import 'package:munasabati/constants.dart';
+import 'package:munasabati/l10n/app_localizations.dart';
+import 'package:munasabati/models/booking_models.dart';
+import 'package:munasabati/route/route_constants.dart';
+import 'package:munasabati/services/booking_provider.dart';
 import 'package:provider/provider.dart';
 
 class ServiceListingScreen extends StatefulWidget {
@@ -33,9 +34,10 @@ class _ServiceListingScreenState extends State<ServiceListingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text(_getTypeLabel(_selectedType) ?? 'All Services'),
+        title: Text(_getTypeLabel(_selectedType) ?? l10n.allServices),
       ),
       body: Column(
         children: [
@@ -59,7 +61,7 @@ class _ServiceListingScreenState extends State<ServiceListingScreen> {
                         const Icon(Icons.search_off,
                             size: 64, color: Colors.grey),
                         const SizedBox(height: 16),
-                        Text('No services found',
+                        Text(l10n.noServicesFound,
                             style: Theme.of(context).textTheme.titleMedium),
                       ],
                     ),
@@ -91,6 +93,7 @@ class _ServiceListingScreenState extends State<ServiceListingScreen> {
   }
 
   Widget _buildFilterBar(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.all(defaultPadding),
       child: Column(
@@ -99,7 +102,7 @@ class _ServiceListingScreenState extends State<ServiceListingScreen> {
             controller: _searchController,
             onChanged: (_) => setState(() {}),
             decoration: InputDecoration(
-              hintText: 'Search services...',
+              hintText: l10n.searchServices,
               prefixIcon: const Icon(Icons.search),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(defaultBorderRadious),
@@ -126,30 +129,30 @@ class _ServiceListingScreenState extends State<ServiceListingScreen> {
             child: Row(
               children: [
                 _FilterChip(
-                  label: 'All',
+                  label: l10n.all,
                   selected: _selectedType == null,
                   onSelected: () => setState(() => _selectedType = null),
                 ),
                 _FilterChip(
-                  label: 'Halls',
+                  label: l10n.halls,
                   selected: _selectedType == ServiceType.hall,
                   onSelected: () =>
                       setState(() => _selectedType = ServiceType.hall),
                 ),
                 _FilterChip(
-                  label: 'Cars',
+                  label: l10n.cars,
                   selected: _selectedType == ServiceType.car,
                   onSelected: () =>
                       setState(() => _selectedType = ServiceType.car),
                 ),
                 _FilterChip(
-                  label: 'Photographers',
+                  label: l10n.photographers,
                   selected: _selectedType == ServiceType.photographer,
                   onSelected: () =>
                       setState(() => _selectedType = ServiceType.photographer),
                 ),
                 _FilterChip(
-                  label: 'Entertainers',
+                  label: l10n.entertainers,
                   selected: _selectedType == ServiceType.entertainer,
                   onSelected: () =>
                       setState(() => _selectedType = ServiceType.entertainer),
@@ -158,14 +161,15 @@ class _ServiceListingScreenState extends State<ServiceListingScreen> {
                 DropdownButton<String>(
                   value: _sortBy,
                   underline: const SizedBox(),
-                  items: const [
-                    DropdownMenuItem(value: 'rating', child: Text('Top Rated')),
+                  items: [
                     DropdownMenuItem(
-                        value: 'price_low', child: Text('Price: Low')),
+                        value: 'rating', child: Text(l10n.topRated)),
                     DropdownMenuItem(
-                        value: 'price_high', child: Text('Price: High')),
+                        value: 'price_low', child: Text(l10n.priceLow)),
                     DropdownMenuItem(
-                        value: 'reviews', child: Text('Most Reviewed')),
+                        value: 'price_high', child: Text(l10n.priceHigh)),
+                    DropdownMenuItem(
+                        value: 'reviews', child: Text(l10n.mostReviewed)),
                   ],
                   onChanged: (val) {
                     if (val != null) setState(() => _sortBy = val);
@@ -180,15 +184,16 @@ class _ServiceListingScreenState extends State<ServiceListingScreen> {
   }
 
   String? _getTypeLabel(ServiceType? type) {
+    final l10n = AppLocalizations.of(context);
     switch (type) {
       case ServiceType.hall:
-        return 'Event Halls';
+        return l10n.eventHalls;
       case ServiceType.car:
-        return 'Wedding Cars';
+        return l10n.weddingCars;
       case ServiceType.photographer:
-        return 'Photographers';
+        return l10n.photographers;
       case ServiceType.entertainer:
-        return 'Entertainers';
+        return l10n.entertainers;
       case null:
         return null;
     }
@@ -228,6 +233,7 @@ class _ServiceListCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.only(bottom: defaultPadding),
       child: InkWell(
@@ -345,7 +351,7 @@ class _ServiceListCard extends StatelessWidget {
                           ),
                           if (service.pricingModel == PricingModel.hourly)
                             Text(
-                              '/hr',
+                              l10n.perHour,
                               style: Theme.of(context).textTheme.labelSmall,
                             ),
                         ],

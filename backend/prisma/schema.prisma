@@ -1,0 +1,444 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ═══════════════════════════════════════════════════════════
+// USERS & AUTHENTICATION
+// ═══════════════════════════════════════════════════════════
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  passwordHash  String    @map("password_hash")
+  phone         String?
+  fullName      String    @map("full_name")
+  avatarUrl     String?   @map("avatar_url")
+  role          UserRole  @default(CONSUMER)
+  isVerified    Boolean   @default(false) @map("is_verified")
+  isActive      Boolean   @default(true) @map("is_active")
+  preferences   Json?     @default("{}")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  refreshTokens RefreshToken[]
+  bookings      Booking[]
+  reviews       Review[]
+  bookmarks     Bookmark[]
+  notifications Notification[]
+  provider      Provider?
+  userPreferences UserPreferences?
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  tokenHash String   @map("token_hash")
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+enum UserRole {
+  CONSUMER
+  PROVIDER
+  ADMIN
+
+  @@map("user_role")
+}
+
+// ═══════════════════════════════════════════════════════════
+// SERVICE PROVIDERS
+// ═══════════════════════════════════════════════════════════
+
+model Provider {
+  id             String       @id @default(uuid())
+  userId         String       @unique @map("user_id")
+  businessName   String       @map("business_name")
+  description    String?
+  logoUrl        String?      @map("logo_url")
+  coverUrl       String?      @map("cover_url")
+  serviceType    ServiceType  @map("service_type")
+  rating         Decimal      @default(0) @db.Decimal(3, 2)
+  reviewCount    Int          @default(0) @map("review_count")
+  isVerified     Boolean      @default(false) @map("is_verified")
+  isActive       Boolean      @default(true) @map("is_active")
+  location       Unsupported("point")?
+  address        String?
+  city           String?
+  country        String?
+  contactPhone   String?      @map("contact_phone")
+  contactEmail   String?      @map("contact_email")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+
+  // Relations
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  services Service[]
+
+  @@index([serviceType])
+  @@map("providers")
+}
+
+// ═══════════════════════════════════════════════════════════
+// SERVICES
+// ═══════════════════════════════════════════════════════════
+
+model Service {
+  id                 String        @id @default(uuid())
+  providerId         String        @map("provider_id")
+  title              String
+  description        String?
+  serviceType        ServiceType   @map("service_type")
+  basePrice          Decimal       @map("base_price") @db.Decimal(12, 2)
+  currency           String        @default("YER")
+  pricingModel       PricingModel  @default(FLAT) @map("pricing_model")
+  images             Json?         @default("[]")
+  tags               Json?         @default("[]")
+  attributes         Json?         @default("{}")
+  isAvailable        Boolean       @default(true) @map("is_available")
+  maxCapacity        Int?          @map("max_capacity")
+  minDurationHours   Decimal?      @map("min_duration_hrs") @db.Decimal(4, 2)
+  maxDurationHours   Decimal?      @map("max_duration_hrs") @db.Decimal(4, 2)
+  cancellationPolicy Json?         @map("cancellation_policy")
+  createdAt          DateTime      @default(now()) @map("created_at")
+  updatedAt          DateTime      @updatedAt @map("updated_at")
+
+  // Relations
+  provider             Provider              @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  availabilityTemplates AvailabilityTemplate[]
+  bookedSlots          BookedSlot[]
+  pricingRules         PricingRule[]
+  bookingItems         BookingItem[]
+  bookmarks            Bookmark[]
+
+  @@index([serviceType])
+  @@index([providerId])
+  @@map("services")
+}
+
+enum ServiceType {
+  HALL
+  CAR
+  PHOTOGRAPHER
+  ENTERTAINER
+
+  @@map("service_type")
+}
+
+enum PricingModel {
+  FLAT
+  HOURLY
+  PER_EVENT
+  TIERED
+
+  @@map("pricing_model")
+}
+
+// ═══════════════════════════════════════════════════════════
+// AVAILABILITY & TIME SLOTS
+// ═══════════════════════════════════════════════════════════
+
+model AvailabilityTemplate {
+  id             String    @id @default(uuid())
+  serviceId      String    @map("service_id")
+  dayOfWeek      Int       @map("day_of_week")
+  startTime      DateTime  @map("start_time") @db.Time()
+  endTime        DateTime  @map("end_time") @db.Time()
+  isAvailable    Boolean   @default(true) @map("is_available")
+  effectiveFrom  DateTime? @map("effective_from")
+  effectiveTo    DateTime? @map("effective_to")
+
+  service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@map("availability_templates")
+}
+
+model BookedSlot {
+  id        String        @id @default(uuid())
+  serviceId String        @map("service_id")
+  bookingId String        @map("booking_id")
+  date      DateTime      @db.Date
+  startTime DateTime      @map("start_time") @db.Time()
+  endTime   DateTime      @map("end_time") @db.Time()
+  status    SlotStatus    @default(CONFIRMED)
+  createdAt DateTime      @default(now()) @map("created_at")
+
+  service Service @relation(fields: [serviceId], references: [id])
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([serviceId, date])
+  @@map("booked_slots")
+}
+
+enum SlotStatus {
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  NO_SHOW
+
+  @@map("slot_status")
+}
+
+// ═══════════════════════════════════════════════════════════
+// PRICING RULES
+// ═══════════════════════════════════════════════════════════
+
+model PricingRule {
+  id               String        @id @default(uuid())
+  serviceId        String        @map("service_id")
+  ruleType         PricingRuleType @map("rule_type")
+  multiplier       Decimal       @default(1.00) @db.Decimal(5, 2)
+  fixedAdjustment  Decimal?      @map("fixed_adjustment") @db.Decimal(12, 2)
+  startDate        DateTime?     @map("start_date")
+  endDate          DateTime?     @map("end_date")
+  dayOfWeek        Int?          @map("day_of_week")
+  minAdvanceDays   Int?          @map("min_advance_days")
+  minBookings      Int?          @map("min_bookings")
+  priority         Int           @default(0)
+  isActive         Boolean       @default(true) @map("is_active")
+  createdAt        DateTime      @default(now()) @map("created_at")
+
+  service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@map("pricing_rules")
+}
+
+enum PricingRuleType {
+  SEASONAL
+  WEEKEND
+  PEAK
+  EARLY_BIRD
+  LAST_MINUTE
+  BULK_DISCOUNT
+
+  @@map("pricing_rule_type")
+}
+
+// ═══════════════════════════════════════════════════════════
+// BOOKINGS
+// ═══════════════════════════════════════════════════════════
+
+model Booking {
+  id               String          @id @default(uuid())
+  consumerId       String          @map("consumer_id")
+  eventType        EventType       @default(WEDDING) @map("event_type")
+  eventDate        DateTime        @map("event_date") @db.Date
+  eventName        String?         @map("event_name")
+  status           BookingStatus   @default(PENDING)
+  totalAmount      Decimal         @default(0) @map("total_amount") @db.Decimal(12, 2)
+  currency         String          @default("YER")
+  depositAmount    Decimal?        @map("deposit_amount") @db.Decimal(12, 2)
+  depositPaid      Boolean         @default(false) @map("deposit_paid")
+  notes            String?
+  specialRequests  String?         @map("special_requests")
+  createdAt        DateTime        @default(now()) @map("created_at")
+  updatedAt        DateTime        @updatedAt @map("updated_at")
+
+  // Relations
+  consumer     User          @relation(fields: [consumerId], references: [id])
+  items        BookingItem[]
+  payments     Payment[]
+  bookedSlots  BookedSlot[]
+
+  @@index([consumerId])
+  @@index([eventDate])
+  @@index([status])
+  @@map("bookings")
+}
+
+model BookingItem {
+  id               String          @id @default(uuid())
+  bookingId        String          @map("booking_id")
+  serviceId        String          @map("service_id")
+  providerId       String          @map("provider_id")
+  date             DateTime        @db.Date
+  startTime        DateTime        @map("start_time") @db.Time()
+  endTime          DateTime        @map("end_time") @db.Time()
+  durationHours    Decimal?        @map("duration_hours") @db.Decimal(4, 2)
+  unitPrice        Decimal         @map("unit_price") @db.Decimal(12, 2)
+  appliedPricing   Json?           @map("applied_pricing")
+  subtotal         Decimal         @db.Decimal(12, 2)
+  status           BookingItemStatus @default(PENDING)
+  specialRequests  String?         @map("special_requests")
+  createdAt        DateTime        @default(now()) @map("created_at")
+
+  // Relations
+  booking Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  service Service  @relation(fields: [serviceId], references: [id])
+  reviews Review[]
+
+  @@map("booking_items")
+}
+
+enum EventType {
+  WEDDING
+  BIRTHDAY
+  CORPORATE
+  ENGAGEMENT
+  OTHER
+
+  @@map("event_type")
+}
+
+enum BookingStatus {
+  DRAFT
+  PENDING
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  REFUNDED
+
+  @@map("booking_status")
+}
+
+enum BookingItemStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+
+  @@map("booking_item_status")
+}
+
+// ═══════════════════════════════════════════════════════════
+// PAYMENTS
+// ═══════════════════════════════════════════════════════════
+
+model Payment {
+  id                     String          @id @default(uuid())
+  bookingId              String          @map("booking_id")
+  amount                 Decimal         @db.Decimal(12, 2)
+  currency               String          @default("YER")
+  paymentMethod          PaymentMethod   @map("payment_method")
+  stripePaymentIntentId  String?         @map("stripe_payment_intent_id")
+  status                 PaymentStatus   @default(PENDING)
+  metadata               Json?
+  createdAt              DateTime        @default(now()) @map("created_at")
+  updatedAt              DateTime        @updatedAt @map("updated_at")
+
+  booking Booking @relation(fields: [bookingId], references: [id])
+
+  @@map("payments")
+}
+
+enum PaymentMethod {
+  CARD
+  BANK_TRANSFER
+  WALLET
+  CASH
+
+  @@map("payment_method")
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+
+  @@map("payment_status")
+}
+
+// ═══════════════════════════════════════════════════════════
+// REVIEWS
+// ═══════════════════════════════════════════════════════════
+
+model Review {
+  id              String    @id @default(uuid())
+  bookingItemId   String    @map("booking_item_id")
+  consumerId      String    @map("consumer_id")
+  providerId      String    @map("provider_id")
+  rating          Int
+  comment         String?
+  images          Json?     @default("[]")
+  isAnonymous     Boolean   @default(false) @map("is_anonymous")
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  bookingItem BookingItem @relation(fields: [bookingItemId], references: [id])
+  consumer    User        @relation(fields: [consumerId], references: [id])
+
+  @@map("reviews")
+}
+
+// ═══════════════════════════════════════════════════════════
+// NOTIFICATIONS
+// ═══════════════════════════════════════════════════════════
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String           @map("user_id")
+  type      NotificationType
+  title     String
+  body      String
+  data      Json?
+  isRead    Boolean          @default(false) @map("is_read")
+  createdAt DateTime         @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@map("notifications")
+}
+
+enum NotificationType {
+  BOOKING_CONFIRMED
+  BOOKING_CANCELLED
+  PAYMENT_RECEIVED
+  REMINDER
+  REVIEW_REQUEST
+  PROVIDER_MESSAGE
+  PRICE_DROP
+  SYSTEM
+
+  @@map("notification_type")
+}
+
+// ═══════════════════════════════════════════════════════════
+// USER PREFERENCES & BOOKMARKS
+// ═══════════════════════════════════════════════════════════
+
+model UserPreferences {
+  id                         String   @id @default(uuid())
+  userId                     String   @unique @map("user_id")
+  preferredHallThemes        Json?    @default("[]") @map("preferred_hall_themes")
+  preferredCarTypes          Json?    @default("[]") @map("preferred_car_types")
+  preferredPhotographerStyles Json?   @default("[]") @map("preferred_photographer_styles")
+  preferredEntertainerTypes  Json?    @default("[]") @map("preferred_entertainer_types")
+  budgetRange                Json?    @map("budget_range")
+  preferredCities            Json?    @default("[]") @map("preferred_cities")
+  notificationSettings       Json?    @map("notification_settings")
+  createdAt                  DateTime @default(now()) @map("created_at")
+  updatedAt                  DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_preferences")
+}
+
+model Bookmark {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  serviceId String   @map("service_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, serviceId])
+  @@map("bookmarks")
+}

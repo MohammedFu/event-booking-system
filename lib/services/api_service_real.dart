@@ -2,6 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:munasabati/models/booking_models.dart';
 import 'dio_client.dart';
 
+/// Combined auth result with tokens and user data
+class AuthResult {
+  final AuthTokens tokens;
+  final UserModel? user;
+
+  const AuthResult({
+    required this.tokens,
+    this.user,
+  });
+}
+
 /// Real API service using Dio HTTP client
 /// Replaces the mock ApiService when backend is ready
 class ApiServiceReal {
@@ -16,7 +27,7 @@ class ApiServiceReal {
   // AUTH
   // ═══════════════════════════════════════════════════════════
 
-  Future<ApiResponse<AuthTokens>> login({
+  Future<ApiResponse<AuthResult>> login({
     required String email,
     required String password,
   }) async {
@@ -35,11 +46,29 @@ class ApiServiceReal {
           refreshToken: data['refreshToken'],
         );
 
+        // Parse user data if available
+        UserModel? user;
+        if (data['user'] != null) {
+          final userData = data['user'];
+          user = UserModel(
+            id: userData['id'],
+            email: userData['email'],
+            fullName: userData['fullName'],
+            phone: userData['phone'],
+            role: _parseUserRole(userData['role']),
+            avatarUrl: userData['avatarUrl'],
+            isVerified: userData['isVerified'] ?? false,
+          );
+        }
+
         return ApiResponse.ok(
-          AuthTokens(
-            accessToken: data['accessToken'],
-            refreshToken: data['refreshToken'],
-            expiresAt: DateTime.parse(data['expiresAt']),
+          AuthResult(
+            tokens: AuthTokens(
+              accessToken: data['accessToken'],
+              refreshToken: data['refreshToken'],
+              expiresAt: DateTime.parse(data['expiresAt']),
+            ),
+            user: user,
           ),
         );
       }
@@ -53,11 +82,12 @@ class ApiServiceReal {
     }
   }
 
-  Future<ApiResponse<AuthTokens>> register({
+  Future<ApiResponse<AuthResult>> register({
     required String email,
     required String password,
     required String fullName,
     String? phone,
+    UserRole? role,
   }) async {
     try {
       final response = await _client.post('/api/v1/auth/register', data: {
@@ -65,6 +95,7 @@ class ApiServiceReal {
         'password': password,
         'fullName': fullName,
         'phone': phone,
+        'role': role?.name.toUpperCase(),
       });
 
       if (response.statusCode == 201 && response.data['success'] == true) {
@@ -76,11 +107,29 @@ class ApiServiceReal {
           refreshToken: data['refreshToken'],
         );
 
+        // Parse user data if available
+        UserModel? user;
+        if (data['user'] != null) {
+          final userData = data['user'];
+          user = UserModel(
+            id: userData['id'],
+            email: userData['email'],
+            fullName: userData['fullName'],
+            phone: userData['phone'],
+            role: _parseUserRole(userData['role']),
+            avatarUrl: userData['avatarUrl'],
+            isVerified: userData['isVerified'] ?? false,
+          );
+        }
+
         return ApiResponse.ok(
-          AuthTokens(
-            accessToken: data['accessToken'],
-            refreshToken: data['refreshToken'],
-            expiresAt: DateTime.parse(data['expiresAt']),
+          AuthResult(
+            tokens: AuthTokens(
+              accessToken: data['accessToken'],
+              refreshToken: data['refreshToken'],
+              expiresAt: DateTime.parse(data['expiresAt']),
+            ),
+            user: user,
           ),
         );
       }
@@ -713,6 +762,103 @@ class ApiServiceReal {
   // PROVIDER METHODS
   // ═══════════════════════════════════════════════════════════
 
+  Future<ApiResponse<ProviderDashboardStats>> getProviderDashboard() async {
+    try {
+      final response = await _client.get('/api/v1/provider/dashboard');
+
+      if (response.statusCode == 200 && response.data['success'] == true) {
+        return ApiResponse.ok(_parseProviderDashboard(response.data['data']));
+      }
+
+      return ApiResponse.fail(
+        response.data['message'] ?? 'Failed to get provider dashboard',
+        statusCode: response.statusCode,
+      );
+    } catch (e) {
+      return ApiResponse.fail(e.toString());
+    }
+  }
+
+  Future<ApiResponse<List<BookingModel>>> getProviderBookings({
+    BookingStatus? status,
+    int page = 1,
+    int limit = 20,
+  }) async {
+    try {
+      final queryParams = <String, dynamic>{
+        'page': page,
+        'limit': limit,
+      };
+      if (status != null) queryParams['status'] = status.name.toUpperCase();
+
+      final response = await _client.get(
+        '/api/v1/provider/bookings',
+        queryParameters: queryParams,
+      );
+
+      if (response.statusCode == 200 && response.data['success'] == true) {
+        final List<dynamic> data = response.data['data'];
+        final bookings = data
+            .map((json) => _parseProviderBooking(json as Map<String, dynamic>))
+            .toList();
+        return ApiResponse.ok(bookings, meta: response.data['meta']);
+      }
+
+      return ApiResponse.fail(
+        response.data['message'] ?? 'Failed to get provider bookings',
+        statusCode: response.statusCode,
+      );
+    } catch (e) {
+      return ApiResponse.fail(e.toString());
+    }
+  }
+
+  Future<ApiResponse<BookingItem>> updateProviderBookingStatus({
+    required String bookingItemId,
+    required BookingStatus status,
+  }) async {
+    try {
+      final response = await _client.patch(
+        '/api/v1/provider/bookings/$bookingItemId/status',
+        data: {
+          'status': status.name.toUpperCase(),
+        },
+      );
+
+      if (response.statusCode == 200 && response.data['success'] == true) {
+        return ApiResponse.ok(_parseBookingItem(response.data['data']));
+      }
+
+      return ApiResponse.fail(
+        response.data['message'] ?? 'Failed to update booking status',
+        statusCode: response.statusCode,
+      );
+    } catch (e) {
+      return ApiResponse.fail(e.toString());
+    }
+  }
+
+  Future<ApiResponse<List<ServiceModel>>> getProviderServices() async {
+    try {
+      final response = await _client.get('/api/v1/provider/services');
+
+      if (response.statusCode == 200 && response.data['success'] == true) {
+        final List<dynamic> data = response.data['data'];
+        final services = data
+            .map((json) => _parseService(json as Map<String, dynamic>))
+            .toList();
+        return ApiResponse.ok(services);
+      }
+
+      return ApiResponse.fail(
+        response.data['message'] ?? 'Failed to get provider services',
+        statusCode: response.statusCode,
+      );
+    } catch (e) {
+      return ApiResponse.fail(e.toString());
+    }
+  }
+
   Future<ApiResponse<List<AvailabilityTemplateModel>>> getAvailabilityTemplates(
       String serviceId) async {
     try {
@@ -830,28 +976,279 @@ class ApiServiceReal {
   }
 
   // ═══════════════════════════════════════════════════════════
+  // PROVIDER SERVICE MANAGEMENT (with images)
+  // ═══════════════════════════════════════════════════════════
+
+  Future<ApiResponse<ServiceModel>> createService({
+    required String title,
+    required ServiceType serviceType,
+    required double basePrice,
+    String? description,
+    String currency = 'YER',
+    PricingModel pricingModel = PricingModel.flat,
+    List<String> images = const [],
+    List<String> tags = const [],
+    int? maxCapacity,
+    double? minDurationHours,
+    double? maxDurationHours,
+    bool isAvailable = true,
+    ServiceAttributes? attributes,
+    CancellationPolicy? cancellationPolicy,
+  }) async {
+    try {
+      final data = <String, dynamic>{
+        'title': title,
+        'serviceType': serviceType.name.toUpperCase(),
+        'basePrice': basePrice,
+        'currency': currency,
+        'pricingModel': pricingModel.name.toUpperCase(),
+        'images': images,
+        'tags': tags,
+        'isAvailable': isAvailable,
+      };
+
+      final trimmedDescription = description?.trim();
+      if (trimmedDescription != null && trimmedDescription.isNotEmpty) {
+        data['description'] = trimmedDescription;
+      }
+      if (maxCapacity != null) data['maxCapacity'] = maxCapacity;
+      if (minDurationHours != null) data['minDurationHours'] = minDurationHours;
+      if (maxDurationHours != null) data['maxDurationHours'] = maxDurationHours;
+
+      final serializedAttributes = attributes != null
+          ? _serializeGenericAttributes(attributes)
+          : null;
+      if (serializedAttributes != null && serializedAttributes.isNotEmpty) {
+        data['attributes'] = serializedAttributes;
+      }
+
+      final serializedCancellationPolicy =
+          _serializeCancellationPolicy(cancellationPolicy);
+      if (serializedCancellationPolicy != null) {
+        data['cancellationPolicy'] = serializedCancellationPolicy;
+      }
+
+      final response = await _client.post(
+        '/api/v1/provider/services',
+        data: data,
+      );
+
+      if (response.statusCode == 201 && response.data['success'] == true) {
+        return ApiResponse.ok(_parseService(response.data['data']));
+      }
+
+      return ApiResponse.fail(
+        response.data['message'] ?? 'Failed to create service',
+        statusCode: response.statusCode,
+      );
+    } catch (e) {
+      return ApiResponse.fail(e.toString());
+    }
+  }
+
+  Future<ApiResponse<ServiceModel>> updateService({
+    required String serviceId,
+    String? title,
+    String? description,
+    double? basePrice,
+    String? currency,
+    PricingModel? pricingModel,
+    List<String>? images,
+    List<String>? tags,
+    int? maxCapacity,
+    double? minDurationHours,
+    double? maxDurationHours,
+    bool? isAvailable,
+    ServiceAttributes? attributes,
+    CancellationPolicy? cancellationPolicy,
+  }) async {
+    try {
+      final data = <String, dynamic>{};
+      if (title != null) data['title'] = title;
+      if (description != null) data['description'] = description;
+      if (basePrice != null) data['basePrice'] = basePrice;
+      if (currency != null) data['currency'] = currency;
+      if (pricingModel != null) {
+        data['pricingModel'] = pricingModel.name.toUpperCase();
+      }
+      if (images != null) data['images'] = images;
+      if (tags != null) data['tags'] = tags;
+      if (maxCapacity != null) data['maxCapacity'] = maxCapacity;
+      if (minDurationHours != null) data['minDurationHours'] = minDurationHours;
+      if (maxDurationHours != null) data['maxDurationHours'] = maxDurationHours;
+      if (isAvailable != null) data['isAvailable'] = isAvailable;
+      if (attributes != null) {
+        // Need to determine service type - fetch existing service or pass it
+        data['attributes'] = _serializeGenericAttributes(attributes);
+      }
+      final serializedCancellationPolicy =
+          _serializeCancellationPolicy(cancellationPolicy);
+      if (serializedCancellationPolicy != null) {
+        data['cancellationPolicy'] = serializedCancellationPolicy;
+      }
+
+      final response = await _client.put(
+        '/api/v1/provider/services/$serviceId',
+        data: data,
+      );
+
+      if (response.statusCode == 200 && response.data['success'] == true) {
+        return ApiResponse.ok(_parseService(response.data['data']));
+      }
+
+      return ApiResponse.fail(
+        response.data['message'] ?? 'Failed to update service',
+        statusCode: response.statusCode,
+      );
+    } catch (e) {
+      return ApiResponse.fail(e.toString());
+    }
+  }
+
+  Future<ApiResponse<void>> deleteService(String serviceId) async {
+    try {
+      final response =
+          await _client.delete('/api/v1/provider/services/$serviceId');
+
+      if (response.statusCode == 200 && response.data['success'] == true) {
+        return ApiResponse.ok(null);
+      }
+
+      return ApiResponse.fail(
+        response.data['message'] ?? 'Failed to delete service',
+        statusCode: response.statusCode,
+      );
+    } catch (e) {
+      return ApiResponse.fail(e.toString());
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════
   // PARSERS
   // ═══════════════════════════════════════════════════════════
+
+  static ProviderDashboardStats _parseProviderDashboard(
+      Map<String, dynamic> json) {
+    return ProviderDashboardStats(
+      totalBookings: json['totalBookings'] ?? 0,
+      totalRevenue: _parseDouble(json['totalRevenue']),
+      pendingBookings: json['pendingBookings'] ?? 0,
+      averageRating: _parseDouble(json['averageRating']),
+      completedBookings: json['completedBookings'] ?? 0,
+      cancelledBookings: json['cancelledBookings'] ?? 0,
+      bookingsByServiceType:
+          _parseProviderBookingsByType(json['bookingsByType']),
+    );
+  }
+
+  static Map<String, int> _parseProviderBookingsByType(dynamic data) {
+    if (data is! List) return const {};
+
+    final result = <String, int>{};
+    for (final item in data) {
+      if (item is! Map<String, dynamic>) continue;
+      final key = (item['serviceId'] ?? item['serviceType'] ?? '').toString();
+      if (key.isEmpty) continue;
+      final countData = item['_count'];
+      final count = countData is Map<String, dynamic> ? countData['id'] : null;
+      result[key] = count is int ? count : 0;
+    }
+    return result;
+  }
+
+  static BookingModel _parseProviderBooking(Map<String, dynamic> json) {
+    final bookingJson =
+        (json['booking'] as Map<String, dynamic>?) ?? const <String, dynamic>{};
+    final consumerJson = (bookingJson['consumer'] as Map<String, dynamic>?) ??
+        const <String, dynamic>{};
+    final serviceJson =
+        (json['service'] as Map<String, dynamic>?) ?? const <String, dynamic>{};
+
+    final bookingItem = BookingItem(
+      id: json['id'] ?? '',
+      bookingId: json['bookingId'] ?? bookingJson['id'] ?? '',
+      serviceId: json['serviceId'] ?? serviceJson['id'] ?? '',
+      providerId: json['providerId'] ?? '',
+      date: json['date'] != null
+          ? DateTime.parse(json['date'])
+          : (bookingJson['eventDate'] != null
+              ? DateTime.parse(bookingJson['eventDate'])
+              : DateTime.now()),
+      startTime: _parseTimeOfDay(json['startTime']),
+      endTime: _parseTimeOfDay(json['endTime']),
+      durationHours: _parseDouble(json['durationHours'], defaultValue: 1),
+      unitPrice: _parseDouble(json['unitPrice'] ?? json['subtotal']),
+      subtotal: _parseDouble(json['subtotal'] ?? json['unitPrice']),
+      status: BookingStatus.values.firstWhere(
+        (e) => e.name.toUpperCase() == (json['status'] ?? '').toString(),
+        orElse: () => BookingStatus.pending,
+      ),
+      specialRequests: json['specialRequests'] ?? bookingJson['specialRequests'],
+      service: serviceJson.isNotEmpty
+          ? ServiceModel(
+              id: serviceJson['id'] ?? json['serviceId'] ?? '',
+              providerId: json['providerId'] ?? '',
+              title: serviceJson['title'] ?? '',
+              description: serviceJson['description'],
+              serviceType: ServiceType.values.firstWhere(
+                (e) =>
+                    e.name.toUpperCase() ==
+                    (serviceJson['serviceType'] ?? '').toString(),
+                orElse: () => ServiceType.hall,
+              ),
+              basePrice: _parseDouble(json['unitPrice'] ?? json['subtotal']),
+              currency: bookingJson['currency'] ?? 'USD',
+              attributes: const ServiceAttributes(),
+              isAvailable: true,
+            )
+          : null,
+    );
+
+    final createdAt = json['createdAt'] ?? bookingJson['createdAt'];
+    final updatedAt = json['updatedAt'] ?? bookingJson['updatedAt'];
+
+    return BookingModel(
+      id: bookingItem.id,
+      consumerId: consumerJson['id'] ?? bookingJson['consumerId'] ?? '',
+      eventType: bookingJson['eventType'] ?? 'event',
+      eventDate: bookingJson['eventDate'] != null
+          ? DateTime.parse(bookingJson['eventDate'])
+          : bookingItem.date,
+      eventName: bookingJson['eventName'] ?? serviceJson['title'],
+      status: bookingItem.status,
+      totalAmount: bookingItem.subtotal,
+      currency: bookingJson['currency'] ?? 'USD',
+      depositAmount: _parseDouble(bookingJson['depositAmount']),
+      depositPaid: bookingJson['depositPaid'] ?? false,
+      items: [bookingItem],
+      notes: consumerJson['fullName'],
+      specialRequests: bookingItem.specialRequests,
+      createdAt: createdAt != null ? DateTime.parse(createdAt) : null,
+      updatedAt: updatedAt != null ? DateTime.parse(updatedAt) : null,
+    );
+  }
 
   static ServiceModel _parseService(Map<String, dynamic> json) {
     final provider = json['provider'];
     return ServiceModel(
-      id: json['id'],
-      providerId: json['providerId'],
-      title: json['title'],
+      id: json['id'] ?? '',
+      providerId: json['providerId'] ?? '',
+      title: json['title'] ?? '',
       description: json['description'],
       serviceType: ServiceType.values.firstWhere(
         (e) => e.name.toUpperCase() == json['serviceType'],
         orElse: () => ServiceType.hall,
       ),
-      basePrice: (json['basePrice'] as num).toDouble(),
+      basePrice: _parseDouble(json['basePrice']),
       currency: json['currency'] ?? 'USD',
       images: (json['images'] as List<dynamic>?)?.cast<String>() ?? [],
       tags: (json['tags'] as List<dynamic>?)?.cast<String>() ?? [],
       attributes: _parseServiceAttributes(json['attributes'] ?? {}),
       maxCapacity: json['maxCapacity'],
-      minDurationHours: json['minDurationHours']?.toDouble() ?? 1,
-      maxDurationHours: json['maxDurationHours']?.toDouble(),
+      minDurationHours: _parseDouble(json['minDurationHours'], defaultValue: 1),
+      maxDurationHours: json['maxDurationHours'] != null
+          ? _parseDouble(json['maxDurationHours'])
+          : null,
       isAvailable: json['isAvailable'] ?? true,
       provider: provider != null ? _parseProvider(provider) : null,
       pricingRules: (json['pricingRules'] as List<dynamic>?)
@@ -890,15 +1287,15 @@ class ApiServiceReal {
 
   static ProviderModel _parseProvider(Map<String, dynamic> json) {
     return ProviderModel(
-      id: json['id'],
-      userId: json['userId'],
-      businessName: json['businessName'],
+      id: json['id'] ?? '',
+      userId: json['userId'] ?? '',
+      businessName: json['businessName'] ?? '',
       description: json['description'],
       serviceType: ServiceType.values.firstWhere(
         (e) => e.name.toUpperCase() == json['serviceType'],
         orElse: () => ServiceType.hall,
       ),
-      rating: (json['rating'] as num?)?.toDouble() ?? 0,
+      rating: _parseDouble(json['rating']),
       reviewCount: json['reviewCount'] ?? 0,
       city: json['city'],
       logoUrl: json['logoUrl'],
@@ -909,8 +1306,8 @@ class ApiServiceReal {
 
   static TimeSlot _parseTimeSlot(Map<String, dynamic> json) {
     return TimeSlot(
-      id: json['id'],
-      serviceId: json['serviceId'],
+      id: json['id'] ?? '',
+      serviceId: json['serviceId'] ?? '',
       date: DateTime.parse(json['date']),
       startTime: _parseTimeString(json['startTime']),
       endTime: _parseTimeString(json['endTime']),
@@ -920,18 +1317,18 @@ class ApiServiceReal {
 
   static BookingModel _parseBooking(Map<String, dynamic> json) {
     return BookingModel(
-      id: json['id'],
-      consumerId: json['consumerId'],
-      eventType: json['eventType'],
+      id: json['id'] ?? '',
+      consumerId: json['consumerId'] ?? '',
+      eventType: json['eventType'] ?? '',
       eventDate: DateTime.parse(json['eventDate']),
-      eventName: json['eventName'],
+      eventName: json['eventName'] ?? '',
       status: BookingStatus.values.firstWhere(
         (e) => e.name.toUpperCase() == json['status'],
         orElse: () => BookingStatus.pending,
       ),
-      totalAmount: (json['totalAmount'] as num).toDouble(),
+      totalAmount: _parseDouble(json['totalAmount']),
       currency: json['currency'] ?? 'USD',
-      depositAmount: (json['depositAmount'] as num?)?.toDouble() ?? 0,
+      depositAmount: _parseDouble(json['depositAmount']),
       depositPaid: json['depositPaid'] ?? false,
       specialRequests: json['specialRequests'],
       items: (json['items'] as List<dynamic>?)
@@ -945,16 +1342,16 @@ class ApiServiceReal {
 
   static BookingItem _parseBookingItem(Map<String, dynamic> json) {
     return BookingItem(
-      id: json['id'],
-      bookingId: json['bookingId'],
-      serviceId: json['serviceId'],
-      providerId: json['providerId'],
+      id: json['id'] ?? '',
+      bookingId: json['bookingId'] ?? '',
+      serviceId: json['serviceId'] ?? '',
+      providerId: json['providerId'] ?? '',
       date: DateTime.parse(json['date']),
       startTime: _parseTimeOfDay(json['startTime']),
       endTime: _parseTimeOfDay(json['endTime']),
-      durationHours: (json['durationHours'] as num?)?.toDouble() ?? 1,
-      unitPrice: (json['unitPrice'] as num).toDouble(),
-      subtotal: (json['subtotal'] as num).toDouble(),
+      durationHours: _parseDouble(json['durationHours'], defaultValue: 1),
+      unitPrice: _parseDouble(json['unitPrice']),
+      subtotal: _parseDouble(json['subtotal']),
       status: BookingStatus.values.firstWhere(
         (e) => e.name.toUpperCase() == json['status'],
         orElse: () => BookingStatus.pending,
@@ -968,9 +1365,9 @@ class ApiServiceReal {
 
   static PaymentModel _parsePayment(Map<String, dynamic> json) {
     return PaymentModel(
-      id: json['id'],
-      bookingId: json['bookingId'],
-      amount: (json['amount'] as num).toDouble(),
+      id: json['id'] ?? '',
+      bookingId: json['bookingId'] ?? '',
+      amount: _parseDouble(json['amount']),
       currency: json['currency'] ?? 'USD',
       paymentMethod: json['paymentMethod'] ?? 'CARD',
       status: PaymentStatus.values.firstWhere(
@@ -983,10 +1380,10 @@ class ApiServiceReal {
 
   static ReviewModel _parseReview(Map<String, dynamic> json) {
     return ReviewModel(
-      id: json['id'],
+      id: json['id'] ?? '',
       bookingItemId: json['bookingItemId'],
-      consumerId: json['consumerId'],
-      providerId: json['providerId'],
+      consumerId: json['consumerId'] ?? '',
+      providerId: json['providerId'] ?? '',
       rating: json['rating'],
       comment: json['comment'],
       images: (json['images'] as List<dynamic>?)?.cast<String>() ?? [],
@@ -997,11 +1394,11 @@ class ApiServiceReal {
 
   static NotificationModel _parseNotification(Map<String, dynamic> json) {
     return NotificationModel(
-      id: json['id'],
-      userId: json['userId'],
-      type: json['type'],
-      title: json['title'],
-      body: json['body'],
+      id: json['id'] ?? '',
+      userId: json['userId'] ?? '',
+      type: json['type'] ?? '',
+      title: json['title'] ?? '',
+      body: json['body'] ?? '',
       data: json['data'] ?? {},
       isRead: json['isRead'] ?? false,
       createdAt: DateTime.parse(json['createdAt']),
@@ -1010,14 +1407,14 @@ class ApiServiceReal {
 
   static PricingRuleModel _parsePricingRule(Map<String, dynamic> json) {
     return PricingRuleModel(
-      id: json['id'],
-      serviceId: json['serviceId'],
+      id: json['id'] ?? '',
+      serviceId: json['serviceId'] ?? '',
       ruleType: PricingRuleType.values.firstWhere(
         (e) => e.name.toUpperCase() == json['ruleType'],
         orElse: () => PricingRuleType.weekend,
       ),
-      multiplier: (json['multiplier'] as num).toDouble(),
-      fixedAdjustment: (json['fixedAdjustment'] as num?)?.toDouble() ?? 0,
+      multiplier: _parseDouble(json['multiplier']),
+      fixedAdjustment: _parseDouble(json['fixedAdjustment']),
       startDate:
           json['startDate'] != null ? DateTime.parse(json['startDate']) : null,
       endDate: json['endDate'] != null ? DateTime.parse(json['endDate']) : null,
@@ -1032,8 +1429,8 @@ class ApiServiceReal {
   static AvailabilityTemplateModel _parseAvailabilityTemplate(
       Map<String, dynamic> json) {
     return AvailabilityTemplateModel(
-      id: json['id'],
-      serviceId: json['serviceId'],
+      id: json['id'] ?? '',
+      serviceId: json['serviceId'] ?? '',
       dayOfWeek: json['dayOfWeek'],
       startTime: _parseTimeOfDay(json['startTime']),
       endTime: _parseTimeOfDay(json['endTime']),
@@ -1058,8 +1455,10 @@ class ApiServiceReal {
               [],
       budgetRange: budgetRange != null
           ? BudgetRange(
-              min: (budgetRange['min'] as num?)?.toDouble() ?? 0,
-              max: (budgetRange['max'] as num?)?.toDouble() ?? double.infinity,
+              min: _parseDouble(budgetRange['min']),
+              max: budgetRange['max'] != null
+                  ? _parseDouble(budgetRange['max'])
+                  : double.infinity,
             )
           : const BudgetRange(),
       preferredCities:
@@ -1094,5 +1493,116 @@ class ApiServiceReal {
 
   static String _formatTime(TimeOfDay time) {
     return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+  }
+
+  static UserRole _parseUserRole(String? role) {
+    switch (role?.toLowerCase()) {
+      case 'provider':
+        return UserRole.provider;
+      case 'admin':
+        return UserRole.admin;
+      case 'consumer':
+      default:
+        return UserRole.consumer;
+    }
+  }
+
+  static double _parseDouble(dynamic value, {double defaultValue = 0.0}) {
+    if (value == null) return defaultValue;
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value) ?? defaultValue;
+    return defaultValue;
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // SERIALIZATION HELPERS (for sending data to backend)
+  // ═══════════════════════════════════════════════════════════
+
+  static Map<String, dynamic> _serializeGenericAttributes(
+      ServiceAttributes attrs) {
+    // Serialize all non-null attributes for updates
+    final result = <String, dynamic>{};
+    if (attrs.capacity != null) {
+      result['capacity'] = attrs.capacity;
+    }
+    if (attrs.hasStage != null) {
+      result['hasStage'] = attrs.hasStage;
+    }
+    if (attrs.hasParking != null) {
+      result['hasParking'] = attrs.hasParking;
+    }
+    if (attrs.hasKitchen != null) {
+      result['hasKitchen'] = attrs.hasKitchen;
+    }
+    if (attrs.theme != null) {
+      result['theme'] = attrs.theme;
+    }
+    if (attrs.amenities.isNotEmpty) {
+      result['amenities'] = attrs.amenities;
+    }
+    if (attrs.make != null) {
+      result['make'] = attrs.make;
+    }
+    if (attrs.model != null) {
+      result['model'] = attrs.model;
+    }
+    if (attrs.year != null) {
+      result['year'] = attrs.year;
+    }
+    if (attrs.color != null) {
+      result['color'] = attrs.color;
+    }
+    if (attrs.carType != null) {
+      result['carType'] = attrs.carType;
+    }
+    if (attrs.maxPassengers != null) {
+      result['maxPassengers'] = attrs.maxPassengers;
+    }
+    if (attrs.features.isNotEmpty) {
+      result['features'] = attrs.features;
+    }
+    if (attrs.portfolioUrl != null) {
+      result['portfolioUrl'] = attrs.portfolioUrl;
+    }
+    if (attrs.specialties.isNotEmpty) {
+      result['specialties'] = attrs.specialties;
+    }
+    if (attrs.equipment.isNotEmpty) {
+      result['equipment'] = attrs.equipment;
+    }
+    if (attrs.editingIncluded != null) {
+      result['editingIncluded'] = attrs.editingIncluded;
+    }
+    if (attrs.performerType != null) {
+      result['performerType'] = attrs.performerType;
+    }
+    if (attrs.genres.isNotEmpty) {
+      result['genres'] = attrs.genres;
+    }
+    if (attrs.sampleVideoUrl != null) {
+      result['sampleVideoUrl'] = attrs.sampleVideoUrl;
+    }
+    if (attrs.groupSize != null) {
+      result['groupSize'] = attrs.groupSize;
+    }
+    return result;
+  }
+
+  static Map<String, dynamic>? _serializeCancellationPolicy(
+      CancellationPolicy? policy) {
+    if (policy == null) return null;
+
+    final result = <String, dynamic>{
+      'freeCancellationHours': policy.freeCancellationHours,
+      'partialRefundPercentage': policy.partialRefundPercentage,
+      'depositRefundable': policy.depositRefundable,
+    };
+
+    final description = policy.description?.trim();
+    if (description != null && description.isNotEmpty) {
+      result['description'] = description;
+    }
+
+    return result;
   }
 }

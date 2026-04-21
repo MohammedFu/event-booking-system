@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:form_field_validator/form_field_validator.dart';
+import 'package:munasabati/l10n/app_localizations.dart';
 
 // Just for demo
 const productDemoImg1 = "https://i.imgur.com/CGCyp1d.png";
@@ -66,16 +67,29 @@ const double defaultPadding = 16.0;
 const double defaultBorderRadious = 12.0;
 const Duration defaultDuration = Duration(milliseconds: 300);
 
-final passwordValidator = MultiValidator([
-  RequiredValidator(errorText: 'Password is required'),
-  MinLengthValidator(8, errorText: 'password must be at least 8 digits long'),
-  PatternValidator(r'(?=.*?[#?!@$%^&*-])',
-      errorText: 'passwords must have at least one special character')
-]);
+MultiValidator buildPasswordValidator(AppLocalizations l10n) => MultiValidator([
+      RequiredValidator(errorText: l10n.pleaseEnterYourPassword),
+      MinLengthValidator(
+        8,
+        errorText: l10n.translate('password_min_8_chars'),
+      ),
+      PatternValidator(
+        r'(?=.*?[#?!@$%^&*-])',
+        errorText: l10n.translate('password_special_character_required'),
+      ),
+    ]);
 
-final emaildValidator = MultiValidator([
-  RequiredValidator(errorText: 'Email is required'),
-  EmailValidator(errorText: "Enter a valid email address"),
-]);
+MultiValidator buildEmailValidator(AppLocalizations l10n) => MultiValidator([
+      RequiredValidator(errorText: l10n.pleaseEnterYourEmail),
+      EmailValidator(errorText: l10n.translate('valid_email_address')),
+    ]);
 
-const pasNotMatchErrorText = "passwords do not match";
+String passwordsDoNotMatch(AppLocalizations l10n) =>
+    l10n.translate('passwords_do_not_match');
+
+// Currency
+const String currencySymbol = 'ي.ر';
+
+String formatPrice(double price) {
+  return '${price.toStringAsFixed(0)} $currencySymbol';
+}

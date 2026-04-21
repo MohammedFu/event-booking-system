@@ -39,6 +39,36 @@ function generateTokens(user, fastify) {
   return { accessToken, refreshToken, refreshTokenHash };
 }
 
+async function ensureProviderProfile(user) {
+  if (!user || user.role !== 'PROVIDER') {
+    return null;
+  }
+
+  const existingProvider = await prisma.provider.findUnique({
+    where: { userId: user.id },
+  });
+
+  if (existingProvider) {
+    return existingProvider;
+  }
+
+  const businessName =
+    user.fullName?.trim() ||
+    user.email?.split('@')?.[0] ||
+    'Provider';
+
+  return prisma.provider.create({
+    data: {
+      userId: user.id,
+      businessName,
+      serviceType: 'HALL',
+      contactEmail: user.email,
+      contactPhone: user.phone,
+      isActive: true,
+    },
+  });
+}
+
 async function routes(fastify, options) {
   // ═══════════════════════════════════════════════════════════
   // POST /register
@@ -116,10 +146,13 @@ async function routes(fastify, options) {
           id: true,
           email: true,
           fullName: true,
+          phone: true,
           role: true,
           createdAt: true,
         },
       });
+
+      await ensureProviderProfile(user);
 
       // Generate tokens
       const { accessToken, refreshToken, refreshTokenHash } = generateTokens(user, fastify);
@@ -188,6 +221,8 @@ async function routes(fastify, options) {
           message: 'Invalid credentials',
         });
       }
+
+      await ensureProviderProfile(user);
 
       // Generate tokens
       const { accessToken, refreshToken, refreshTokenHash } = generateTokens(user, fastify);
@@ -355,7 +390,7 @@ async function routes(fastify, options) {
     handler: async (request, reply) => {
       const userId = request.user.userId;
 
-      const user = await prisma.user.findUnique({
+      let user = await prisma.user.findUnique({
         where: { id: userId },
         select: {
           id: true,
@@ -375,6 +410,24 @@ async function routes(fastify, options) {
           success: false,
           error: 'Not Found',
           message: 'User not found',
+        });
+      }
+
+      if (user.role === 'PROVIDER' && !user.provider) {
+        await ensureProviderProfile(user);
+        user = await prisma.user.findUnique({
+          where: { id: userId },
+          select: {
+            id: true,
+            email: true,
+            fullName: true,
+            phone: true,
+            avatarUrl: true,
+            role: true,
+            isVerified: true,
+            createdAt: true,
+            provider: true,
+          },
         });
       }
 

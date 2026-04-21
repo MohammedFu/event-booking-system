@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:munasabati/constants.dart';
+import 'package:munasabati/l10n/app_localizations.dart';
+import 'package:munasabati/l10n/model_localizations.dart';
 import 'package:munasabati/models/booking_models.dart';
-import 'package:munasabati/models/demo_booking_data.dart';
 import 'package:munasabati/route/route_constants.dart' as routes;
+import 'package:munasabati/services/booking_provider.dart';
+import 'package:provider/provider.dart';
 
 class BookingSearchScreen extends StatefulWidget {
   const BookingSearchScreen({super.key});
@@ -18,43 +21,52 @@ class _BookingSearchScreenState extends State<BookingSearchScreen> {
   String _query = '';
 
   @override
+  void initState() {
+    super.initState();
+    _fetchServices();
+  }
+
+  Future<void> _fetchServices() async {
+    await context.read<BookingProvider>().fetchServices();
+  }
+
+  @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
   }
 
   void _performSearch(String query) {
+    final provider = context.read<BookingProvider>();
     setState(() {
       _query = query;
       _isSearching = true;
     });
 
-    // Simulate search with demo data
-    Future.delayed(const Duration(milliseconds: 300), () {
-      if (!mounted) return;
-      final q = query.toLowerCase();
-      setState(() {
-        _results = allDemoServices
-            .where((s) =>
-                s.title.toLowerCase().contains(q) ||
-                s.description?.toLowerCase().contains(q) == true ||
-                s.tags.any((t) => t.toLowerCase().contains(q)) ||
-                s.serviceTypeLabel.toLowerCase().contains(q))
-            .toList();
-        _isSearching = false;
-      });
+    final q = query.toLowerCase();
+    final allServices = provider.services;
+    setState(() {
+      _results = allServices
+          .where((s) =>
+              s.title.toLowerCase().contains(q) ||
+              s.description?.toLowerCase().contains(q) == true ||
+              s.tags.any((t) => t.toLowerCase().contains(q)) ||
+              s.serviceType.label(context).toLowerCase().contains(q))
+          .toList();
+      _isSearching = false;
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
         title: TextField(
           controller: _searchController,
           autofocus: true,
           decoration: InputDecoration(
-            hintText: 'Search halls, cars, photographers...',
+            hintText: l10n.searchHallsCars,
             border: InputBorder.none,
             hintStyle: Theme.of(context).textTheme.bodyLarge?.copyWith(
                   color: Theme.of(context)
@@ -100,16 +112,15 @@ class _BookingSearchScreenState extends State<BookingSearchScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.search_off,
-                size: 64,
-                color: Theme.of(context).disabledColor),
+                size: 64, color: Theme.of(context).disabledColor),
             const SizedBox(height: defaultPadding),
             Text(
-              'No results found',
+              context.tr('no_results'),
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: defaultPadding / 2),
             Text(
-              'Try different keywords',
+              context.tr('try_different_keywords'),
               style: Theme.of(context).textTheme.bodySmall,
             ),
           ],
@@ -141,32 +152,32 @@ class _BookingSearchScreenState extends State<BookingSearchScreen> {
     final categories = [
       _SuggestionCategory(
         icon: Icons.domain,
-        label: 'Event Halls',
+        label: AppLocalizations.of(context).eventHalls,
         type: ServiceType.hall,
       ),
       _SuggestionCategory(
         icon: Icons.directions_car,
-        label: 'Cars & Limos',
+        label: AppLocalizations.of(context).carsLimos,
         type: ServiceType.car,
       ),
       _SuggestionCategory(
         icon: Icons.camera_alt,
-        label: 'Photographers',
+        label: AppLocalizations.of(context).photographers,
         type: ServiceType.photographer,
       ),
       _SuggestionCategory(
         icon: Icons.music_note,
-        label: 'Entertainers',
+        label: AppLocalizations.of(context).entertainers,
         type: ServiceType.entertainer,
       ),
     ];
 
     final popularSearches = [
-      'Wedding hall',
-      'Luxury limo',
-      'DJ for wedding',
-      'Photo booth',
-      'Vintage car',
+      context.tr('popular_search_wedding_hall'),
+      context.tr('popular_search_luxury_limo'),
+      context.tr('popular_search_dj_for_wedding'),
+      context.tr('popular_search_photo_booth'),
+      context.tr('popular_search_vintage_car'),
     ];
 
     return SingleChildScrollView(
@@ -174,7 +185,7 @@ class _BookingSearchScreenState extends State<BookingSearchScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Categories',
+          Text(AppLocalizations.of(context).categories,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   )),
@@ -197,7 +208,7 @@ class _BookingSearchScreenState extends State<BookingSearchScreen> {
             }).toList(),
           ),
           const SizedBox(height: defaultPadding * 2),
-          Text('Popular Searches',
+          Text(AppLocalizations.of(context).popularSearches,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   )),
@@ -263,7 +274,7 @@ class _SearchResultCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  service.serviceTypeLabel,
+                  service.serviceType.label(context),
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
                 const SizedBox(height: 4),
@@ -279,7 +290,7 @@ class _SearchResultCard extends StatelessWidget {
                       const SizedBox(width: defaultPadding / 2),
                     ],
                     Text(
-                      '\$${service.basePrice.toStringAsFixed(0)}',
+                      formatPrice(service.basePrice),
                       style: Theme.of(context)
                           .textTheme
                           .titleSmall

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:munasabati/l10n/app_localizations.dart';
 
 import '../../../../constants.dart';
 import 'product_availability_tag.dart';
@@ -49,12 +50,13 @@ class ProductInfo extends StatelessWidget {
                   "$rating ",
                   style: Theme.of(context).textTheme.bodyLarge,
                 ),
-                Text("($numOfReviews Reviews)")
+                Text(AppLocalizations.of(context)
+                    .reviewsCount(numOfReviews.toString()))
               ],
             ),
             const SizedBox(height: defaultPadding),
             Text(
-              "Product info",
+              AppLocalizations.of(context).translate('product_info'),
               style: Theme.of(context)
                   .textTheme
                   .titleMedium!

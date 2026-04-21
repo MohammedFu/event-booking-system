@@ -1,23 +1,44 @@
 import 'package:flutter/material.dart';
 import 'package:munasabati/constants.dart';
+import 'package:munasabati/l10n/app_localizations.dart';
+import 'package:munasabati/l10n/model_localizations.dart';
 import 'package:munasabati/models/booking_models.dart';
-import 'package:munasabati/models/demo_booking_data.dart';
 import 'package:munasabati/services/booking_provider.dart';
 import 'package:munasabati/route/route_constants.dart' as routes;
 import 'package:provider/provider.dart';
 
-class BookingBookmarksScreen extends StatelessWidget {
+class BookingBookmarksScreen extends StatefulWidget {
   const BookingBookmarksScreen({super.key});
 
   @override
+  State<BookingBookmarksScreen> createState() => _BookingBookmarksScreenState();
+}
+
+class _BookingBookmarksScreenState extends State<BookingBookmarksScreen> {
+  @override
+  void initState() {
+    super.initState();
+    _fetchServices();
+  }
+
+  Future<void> _fetchServices() async {
+    await context.read<BookingProvider>().fetchServices();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Saved Services'),
+        title: Text(l10n.savedServices),
       ),
       body: Consumer<BookingProvider>(
         builder: (context, provider, _) {
-          final bookmarkedServices = allDemoServices
+          if (provider.isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          final bookmarkedServices = provider.services
               .where((s) => provider.isBookmarked(s.id))
               .toList();
 
@@ -29,10 +50,10 @@ class BookingBookmarksScreen extends StatelessWidget {
                   Icon(Icons.bookmark_border,
                       size: 64, color: Theme.of(context).disabledColor),
                   const SizedBox(height: defaultPadding),
-                  Text('No saved services',
+                  Text(l10n.noSavedServices,
                       style: Theme.of(context).textTheme.titleMedium),
                   const SizedBox(height: defaultPadding / 2),
-                  Text('Bookmark services you like to find them easily',
+                  Text(l10n.bookmarkServicesHint,
                       style: Theme.of(context).textTheme.bodySmall),
                 ],
               ),
@@ -110,7 +131,7 @@ class _BookmarkCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
-                    Text(service.serviceTypeLabel,
+                    Text(service.serviceType.label(context),
                         style: Theme.of(context).textTheme.bodySmall),
                     const SizedBox(height: 4),
                     Row(
@@ -123,7 +144,7 @@ class _BookmarkCard extends StatelessWidget {
                         ],
                         const Spacer(),
                         Text(
-                          '\$${service.basePrice.toStringAsFixed(0)}',
+                          formatPrice(service.basePrice),
                           style: Theme.of(context)
                               .textTheme
                               .titleSmall
@@ -137,7 +158,7 @@ class _BookmarkCard extends StatelessWidget {
               IconButton(
                 onPressed: onRemove,
                 icon: const Icon(Icons.bookmark, color: primaryColor),
-                tooltip: 'Remove bookmark',
+                tooltip: context.tr('remove_bookmark'),
               ),
             ],
           ),

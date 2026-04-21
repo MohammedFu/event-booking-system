@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:munasabati/l10n/app_localizations.dart';
 
 import '../constants.dart';
 import 'order_process.dart';
@@ -63,7 +64,7 @@ class OrderStatusCard extends StatelessWidget {
                             ),
                             child: Row(
                               children: [
-                                const Text("Order"),
+                                Text(AppLocalizations.of(context).order),
                                 const SizedBox(width: defaultPadding / 2),
                                 Text("#$orderId"),
                               ],
@@ -71,7 +72,10 @@ class OrderStatusCard extends StatelessWidget {
                           ),
                           const SizedBox(height: defaultPadding / 2),
                           Text(
-                            "Placed on $placedOn",
+                            AppLocalizations.of(context).translate(
+                              'placed_on_value',
+                              params: {'date': placedOn},
+                            ),
                             style: Theme.of(context).textTheme.titleSmall,
                           ),
                         ],

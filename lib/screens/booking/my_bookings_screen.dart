@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:munasabati/constants.dart';
+import 'package:munasabati/l10n/app_localizations.dart';
+import 'package:munasabati/l10n/model_localizations.dart';
 import 'package:munasabati/models/booking_models.dart';
 import 'package:munasabati/route/route_constants.dart';
 import 'package:munasabati/services/booking_provider.dart';
@@ -20,7 +22,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    context.read<BookingProvider>().loadDemoData();
+    context.read<BookingProvider>().fetchBookings();
   }
 
   @override
@@ -31,15 +33,16 @@ class _MyBookingsScreenState extends State<MyBookingsScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Bookings'),
+        title: Text(l10n.myBookings),
         bottom: TabBar(
           controller: _tabController,
-          tabs: const [
-            Tab(text: 'Upcoming'),
-            Tab(text: 'Completed'),
-            Tab(text: 'Cancelled'),
+          tabs: [
+            Tab(text: context.tr('upcoming')),
+            Tab(text: context.tr('completed')),
+            Tab(text: context.tr('cancelled')),
           ],
         ),
       ),
@@ -64,11 +67,14 @@ class _MyBookingsScreenState extends State<MyBookingsScreen>
             controller: _tabController,
             children: [
               _BookingList(
-                  bookings: upcoming, emptyMessage: 'No upcoming bookings'),
+                  bookings: upcoming,
+                  emptyMessage: context.tr('no_upcoming_bookings')),
               _BookingList(
-                  bookings: completed, emptyMessage: 'No completed bookings'),
+                  bookings: completed,
+                  emptyMessage: context.tr('no_completed_bookings')),
               _BookingList(
-                  bookings: cancelled, emptyMessage: 'No cancelled bookings'),
+                  bookings: cancelled,
+                  emptyMessage: context.tr('no_cancelled_bookings')),
             ],
           );
         },
@@ -153,7 +159,7 @@ class _BookingCard extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        booking.eventName ?? 'Event',
+                        booking.eventName ?? context.tr('event'),
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
@@ -167,7 +173,7 @@ class _BookingCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
-                        booking.statusLabel,
+                        booking.status.label(context),
                         style: TextStyle(
                           color: booking.statusColor,
                           fontSize: 12,
@@ -191,7 +197,7 @@ class _BookingCard extends StatelessWidget {
                     const Icon(Icons.category, size: 16, color: Colors.grey),
                     const SizedBox(width: 6),
                     Text(
-                      booking.eventType.toUpperCase(),
+                      localizedEventType(context, booking.eventType),
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             fontWeight: FontWeight.w600,
                           ),
@@ -211,7 +217,7 @@ class _BookingCard extends StatelessWidget {
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              item.service?.title ?? 'Service',
+                              item.service?.title ?? context.tr('service'),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: Theme.of(context).textTheme.bodySmall,
@@ -231,7 +237,9 @@ class _BookingCard extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.only(top: 4),
                     child: Text(
-                      '+ ${booking.items.length - 3} more services',
+                      context.tr('more_services_count', params: {
+                        'count': (booking.items.length - 3).toString(),
+                      }),
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
                             color: primaryColor,
                           ),
@@ -242,11 +250,15 @@ class _BookingCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      '${booking.items.length} services booked',
+                      context.tr('services_booked_count', params: {
+                        'count': booking.items.length.toString(),
+                      }),
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                     Text(
-                      'Total: \$${booking.totalAmount.toInt()}',
+                      context.tr('total_with_amount', params: {
+                        'amount': formatPrice(booking.totalAmount),
+                      }),
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: primaryColor,

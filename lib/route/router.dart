@@ -324,14 +324,24 @@ Route<dynamic> generateRoute(RouteSettings settings) {
     case serviceDetailScreenRoute:
       return MaterialPageRoute(
         builder: (context) {
-          final service = settings.arguments as ServiceModel;
+          final service = settings.arguments as ServiceModel?;
+          if (service == null) {
+            return const Scaffold(
+              body: Center(child: Text('Service not found')),
+            );
+          }
           return ServiceDetailScreen(service: service);
         },
       );
     case dateTimePickerScreenRoute:
       return MaterialPageRoute(
         builder: (context) {
-          final service = settings.arguments as ServiceModel;
+          final service = settings.arguments as ServiceModel?;
+          if (service == null) {
+            return const Scaffold(
+              body: Center(child: Text('Service not found')),
+            );
+          }
           return DateTimePickerScreen(service: service);
         },
       );
@@ -350,7 +360,12 @@ Route<dynamic> generateRoute(RouteSettings settings) {
     case bookingDetailScreenRoute:
       return MaterialPageRoute(
         builder: (context) {
-          final booking = settings.arguments as BookingModel;
+          final booking = settings.arguments as BookingModel?;
+          if (booking == null) {
+            return const Scaffold(
+              body: Center(child: Text('Booking not found')),
+            );
+          }
           return BookingDetailScreen(booking: booking);
         },
       );
@@ -358,10 +373,19 @@ Route<dynamic> generateRoute(RouteSettings settings) {
       return MaterialPageRoute(
         builder: (context) => const ProviderDashboardScreen(),
       );
+    case providerBookingsScreenRoute:
+      return MaterialPageRoute(
+        builder: (context) => const ProviderBookingsScreen(),
+      );
     case providerAvailabilityScreenRoute:
       return MaterialPageRoute(
         builder: (context) {
-          final service = settings.arguments as ServiceModel;
+          final service = settings.arguments as ServiceModel?;
+          if (service == null) {
+            return const Scaffold(
+              body: Center(child: Text('Service not found')),
+            );
+          }
           return ProviderAvailabilityScreen(
             serviceId: service.id,
             serviceTitle: service.title,
@@ -371,13 +395,22 @@ Route<dynamic> generateRoute(RouteSettings settings) {
     case providerPricingRulesScreenRoute:
       return MaterialPageRoute(
         builder: (context) {
-          final service = settings.arguments as ServiceModel;
+          final service = settings.arguments as ServiceModel?;
+          if (service == null) {
+            return const Scaffold(
+              body: Center(child: Text('Service not found')),
+            );
+          }
           return ProviderPricingRulesScreen(service: service);
         },
       );
     case providerServiceManagementScreenRoute:
       return MaterialPageRoute(
         builder: (context) => const ProviderServiceManagementScreen(),
+      );
+    case providerEntryPointScreenRoute:
+      return MaterialPageRoute(
+        builder: (context) => const ProviderEntryPoint(),
       );
     case bookingSearchScreenRoute:
       return MaterialPageRoute(
@@ -390,10 +423,10 @@ Route<dynamic> generateRoute(RouteSettings settings) {
     case bookingReviewsScreenRoute:
       return MaterialPageRoute(
         builder: (context) {
-          final args = settings.arguments as Map<String, String>;
+          final args = settings.arguments as Map<String, String>?;
           return BookingReviewsScreen(
-            serviceId: args['serviceId'] ?? '',
-            serviceTitle: args['serviceTitle'] ?? '',
+            serviceId: args?['serviceId'] ?? '',
+            serviceTitle: args?['serviceTitle'] ?? '',
           );
         },
       );

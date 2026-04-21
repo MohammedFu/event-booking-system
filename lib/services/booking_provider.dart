@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:munasabati/models/booking_models.dart';
-import 'package:munasabati/models/demo_booking_data.dart';
+import 'package:munasabati/services/api_service_real.dart';
 
 class BookingProvider extends ChangeNotifier {
+  final ApiServiceReal _api = ApiServiceReal();
+
   // Booking cart items
   final List<BookingCartItem> _cartItems = [];
   List<BookingCartItem> get cartItems => List.unmodifiable(_cartItems);
@@ -10,6 +12,24 @@ class BookingProvider extends ChangeNotifier {
   // User bookings
   List<BookingModel> _bookings = [];
   List<BookingModel> get bookings => List.unmodifiable(_bookings);
+
+  // Provider bookings
+  List<BookingModel> _providerBookings = [];
+  List<BookingModel> get providerBookings =>
+      List.unmodifiable(_providerBookings);
+
+  // Services from API
+  List<ServiceModel> _services = [];
+  List<ServiceModel> get services => List.unmodifiable(_services);
+
+  // Provider services from API
+  List<ServiceModel> _providerServices = [];
+  List<ServiceModel> get providerServices =>
+      List.unmodifiable(_providerServices);
+
+  // Provider dashboard stats
+  ProviderDashboardStats _providerDashboard = const ProviderDashboardStats();
+  ProviderDashboardStats get providerDashboard => _providerDashboard;
 
   // Bookmarked services
   final Set<String> _bookmarkedServiceIds = {};
@@ -32,6 +52,10 @@ class BookingProvider extends ChangeNotifier {
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
+  // Error message
+  String? _error;
+  String? get error => _error;
+
   // Cart total
   double get cartTotal =>
       _cartItems.fold(0, (sum, item) => sum + item.subtotal);
@@ -40,6 +64,11 @@ class BookingProvider extends ChangeNotifier {
 
   bool hasServiceTypeInCart(ServiceType type) {
     return _cartItems.any((item) => item.service.serviceType == type);
+  }
+
+  void clearError() {
+    _error = null;
+    notifyListeners();
   }
 
   void setEventDate(DateTime date) {
@@ -104,48 +133,225 @@ class BookingProvider extends ChangeNotifier {
     return conflicts;
   }
 
-  Future<void> createBooking() async {
-    if (_selectedEventDate == null || _cartItems.isEmpty) return;
+  Future<bool> createBooking() async {
+    if (_selectedEventDate == null || _cartItems.isEmpty) return false;
 
     _isLoading = true;
+    _error = null;
     notifyListeners();
 
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 2));
-
-    final booking = BookingModel(
-      id: 'booking-${DateTime.now().millisecondsSinceEpoch}',
-      consumerId: 'user-consumer-1',
+    final response = await _api.createBooking(
+      consumerId: 'user-consumer-1', // TODO: Get from auth provider
       eventType: _eventType,
       eventDate: _selectedEventDate!,
-      eventName: _eventType == 'wedding' ? 'Wedding Celebration' : 'Event',
-      status: BookingStatus.pending,
-      totalAmount: cartTotal,
-      depositAmount: cartTotal * 0.25,
-      items: _cartItems
-          .map((item) => BookingItem(
-                id: 'item-${DateTime.now().millisecondsSinceEpoch}-${item.service.id}',
-                bookingId: 'booking-${DateTime.now().millisecondsSinceEpoch}',
-                serviceId: item.service.id,
-                providerId: item.service.providerId,
-                date: item.date,
-                startTime: item.startTime,
-                endTime: item.endTime,
-                durationHours: item.durationHours,
-                unitPrice: item.service.basePrice,
-                subtotal: item.subtotal,
-                status: BookingStatus.pending,
-                specialRequests: item.specialRequests,
-                service: item.service,
-                provider: item.service.provider,
-              ))
-          .toList(),
+      eventName: null,
+      cartItems: _cartItems,
     );
 
-    _bookings.insert(0, booking);
-    _cartItems.clear();
     _isLoading = false;
+
+    if (response.success && response.data != null) {
+      _bookings.insert(0, response.data!);
+      _cartItems.clear();
+      notifyListeners();
+      return true;
+    } else {
+      _error = response.error ?? 'error_create_booking';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<void> fetchBookings({BookingStatus? status}) async {
+    _isLoading = true;
+    _error = null;
     notifyListeners();
+
+    final response = await _api.getBookings(status: status?.name);
+
+    _isLoading = false;
+
+    if (response.success && response.data != null) {
+      _bookings = response.data!;
+    } else {
+      _error = response.error ?? 'error_fetch_bookings';
+    }
+    notifyListeners();
+  }
+
+  Future<void> fetchProviderDashboardData() async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    final dashboardResponse = await _api.getProviderDashboard();
+    final bookingsResponse = await _api.getProviderBookings(limit: 20);
+
+    _isLoading = false;
+
+    if (dashboardResponse.success && dashboardResponse.data != null) {
+      _providerDashboard = dashboardResponse.data!;
+    } else {
+      _error = dashboardResponse.error ?? 'error_fetch_bookings';
+    }
+
+    if (bookingsResponse.success && bookingsResponse.data != null) {
+      _providerBookings = bookingsResponse.data!;
+    } else {
+      _error ??= bookingsResponse.error ?? 'error_fetch_bookings';
+    }
+
+    notifyListeners();
+  }
+
+  Future<void> fetchProviderBookings({BookingStatus? status}) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    final response = await _api.getProviderBookings(status: status);
+
+    _isLoading = false;
+
+    if (response.success && response.data != null) {
+      _providerBookings = response.data!;
+    } else {
+      _error = response.error ?? 'error_fetch_bookings';
+    }
+    notifyListeners();
+  }
+
+  Future<void> fetchServices({
+    ServiceType? type,
+    String? searchQuery,
+    double? minPrice,
+    double? maxPrice,
+    double? minRating,
+    String? city,
+    String sortBy = 'rating',
+  }) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    final response = await _api.getServices(
+      type: type,
+      searchQuery: searchQuery,
+      minPrice: minPrice,
+      maxPrice: maxPrice,
+      minRating: minRating,
+      city: city,
+      sortBy: sortBy,
+    );
+
+    _isLoading = false;
+
+    if (response.success && response.data != null) {
+      _services = response.data!;
+    } else {
+      _error = response.error ?? 'error_fetch_services';
+    }
+    notifyListeners();
+  }
+
+  Future<void> fetchProviderServices() async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    final response = await _api.getProviderServices();
+
+    _isLoading = false;
+
+    if (response.success && response.data != null) {
+      _providerServices = response.data!;
+    } else {
+      _error = response.error ?? 'error_fetch_services';
+    }
+    notifyListeners();
+  }
+
+  Future<bool> updateProviderBookingStatus({
+    required String bookingItemId,
+    required BookingStatus status,
+  }) async {
+    _error = null;
+    notifyListeners();
+
+    final response = await _api.updateProviderBookingStatus(
+      bookingItemId: bookingItemId,
+      status: status,
+    );
+
+    if (response.success) {
+      return true;
+    }
+
+    _error = response.error ?? 'error_fetch_bookings';
+    notifyListeners();
+    return false;
+  }
+
+  Future<bool> updateProviderServiceAvailability({
+    required String serviceId,
+    required bool isAvailable,
+  }) async {
+    _error = null;
+    notifyListeners();
+
+    final response = await _api.updateService(
+      serviceId: serviceId,
+      isAvailable: isAvailable,
+    );
+
+    if (response.success && response.data != null) {
+      _providerServices = _providerServices.map((service) {
+        return service.id == serviceId ? response.data! : service;
+      }).toList();
+      notifyListeners();
+      return true;
+    }
+
+    _error = response.error ?? 'error_fetch_services';
+    notifyListeners();
+    return false;
+  }
+
+  Future<bool> deleteProviderService(String serviceId) async {
+    _error = null;
+    notifyListeners();
+
+    final response = await _api.deleteService(serviceId);
+
+    if (!response.success) {
+      _error = response.error ?? 'error_fetch_services';
+      notifyListeners();
+      return false;
+    }
+
+    await fetchProviderServices();
+    return true;
+  }
+
+  Future<List<TimeSlot>> fetchAvailableSlots(
+      String serviceId, DateTime date) async {
+    final response = await _api.getServiceAvailability(serviceId, date);
+
+    if (response.success && response.data != null) {
+      return response.data!;
+    } else {
+      return [];
+    }
+  }
+
+  Future<ServiceModel?> getServiceById(String id) async {
+    final response = await _api.getServiceById(id);
+
+    if (response.success && response.data != null) {
+      return response.data!;
+    } else {
+      return null;
+    }
   }
 
   void toggleBookmark(String serviceId) {
@@ -164,92 +370,5 @@ class BookingProvider extends ChangeNotifier {
   void updatePreferences(UserPreferences newPreferences) {
     _preferences = newPreferences;
     notifyListeners();
-  }
-
-  // Load demo bookings
-  void loadDemoData() {
-    _bookings = List.from(demoBookings);
-    notifyListeners();
-  }
-
-  // Get services filtered by type and sorted
-  List<ServiceModel> getServices({
-    ServiceType? type,
-    String? searchQuery,
-    double? minPrice,
-    double? maxPrice,
-    double? minRating,
-    String? city,
-    String sortBy = 'rating',
-  }) {
-    var services = type != null ? getServicesByType(type) : allDemoServices;
-
-    if (searchQuery != null && searchQuery.isNotEmpty) {
-      final query = searchQuery.toLowerCase();
-      services = services
-          .where((s) =>
-              s.title.toLowerCase().contains(query) ||
-              s.description?.toLowerCase().contains(query) == true ||
-              s.tags.any((t) => t.toLowerCase().contains(query)))
-          .toList();
-    }
-
-    if (minPrice != null) {
-      services = services.where((s) => s.basePrice >= minPrice).toList();
-    }
-    if (maxPrice != null) {
-      services = services.where((s) => s.basePrice <= maxPrice).toList();
-    }
-    if (minRating != null) {
-      services = services
-          .where((s) => (s.provider?.rating ?? 0) >= minRating)
-          .toList();
-    }
-    if (city != null) {
-      services = services
-          .where((s) => s.provider?.city?.toLowerCase() == city.toLowerCase())
-          .toList();
-    }
-
-    switch (sortBy) {
-      case 'price_low':
-        services.sort((a, b) => a.basePrice.compareTo(b.basePrice));
-      case 'price_high':
-        services.sort((a, b) => b.basePrice.compareTo(a.basePrice));
-      case 'rating':
-        services.sort((a, b) =>
-            (b.provider?.rating ?? 0).compareTo(a.provider?.rating ?? 0));
-      case 'reviews':
-        services.sort((a, b) => (b.provider?.reviewCount ?? 0)
-            .compareTo(a.provider?.reviewCount ?? 0));
-    }
-
-    return services;
-  }
-
-  // Get available time slots for a service on a given date
-  List<TimeSlot> getAvailableSlots(String serviceId, DateTime date) {
-    final service = allDemoServices.firstWhere(
-      (s) => s.id == serviceId,
-      orElse: () => throw StateError('Service not found'),
-    );
-
-    // Generate demo slots
-    final slots = <TimeSlot>[];
-    for (int hour = 8; hour <= 20; hour++) {
-      final isBooked = hour == 14 || hour == 16; // Simulate some booked slots
-      slots.add(TimeSlot(
-        id: 'slot-$serviceId-$date-$hour',
-        serviceId: serviceId,
-        date: date,
-        startTime: TimeOfDay(hour: hour, minute: 0),
-        endTime: TimeOfDay(hour: hour + 1, minute: 0),
-        isAvailable: !isBooked,
-        price: service.pricingModel == PricingModel.hourly
-            ? service.basePrice
-            : null,
-      ));
-    }
-    return slots;
   }
 }

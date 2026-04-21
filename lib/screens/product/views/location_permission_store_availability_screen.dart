@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:munasabati/l10n/app_localizations.dart';
 import 'package:munasabati/theme/input_decoration_theme.dart';
 
 import '../../../constants.dart';
@@ -25,7 +26,7 @@ class LocationPermissonStoreAvailabilityScreen extends StatelessWidget {
                     child: BackButton(),
                   ),
                   Text(
-                    "Store Pickup Availability",
+                    AppLocalizations.of(context).storePickupAvailability,
                     style: Theme.of(context).textTheme.titleSmall,
                   ),
                   const SizedBox(width: 40),
@@ -42,7 +43,7 @@ class LocationPermissonStoreAvailabilityScreen extends StatelessWidget {
                       child: TextFormField(
                         decoration: InputDecoration(
                           fillColor: Colors.transparent,
-                          hintText: "Find something...",
+                          hintText: AppLocalizations.of(context).findSomething,
                           border: secodaryOutlineInputBorder(context),
                           enabledBorder: secodaryOutlineInputBorder(context),
                           focusedBorder: secodaryOutlineInputBorder(context),
@@ -73,20 +74,22 @@ class LocationPermissonStoreAvailabilityScreen extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      "Your Location Services are turned off.",
+                      AppLocalizations.of(context)
+                          .translate('location_services_off'),
                       style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w500,
                           color: Theme.of(context).textTheme.bodyLarge!.color),
                     ),
                     const SizedBox(height: defaultPadding),
-                    const Text(
-                      "Turn on Location Services in your device Settings to search for stores by current location. You can still search by Country/Region, City or Zip Code.",
+                    Text(
+                      AppLocalizations.of(context)
+                          .translate('location_services_off_description'),
                     ),
                     const SizedBox(height: defaultPadding * 1.5),
                     ElevatedButton(
                       onPressed: () {},
-                      child: const Text("Settings"),
+                      child: Text(AppLocalizations.of(context).settings),
                     )
                   ],
                 ),

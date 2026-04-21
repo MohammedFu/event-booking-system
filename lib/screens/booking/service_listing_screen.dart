@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:munasabati/constants.dart';
 import 'package:munasabati/l10n/app_localizations.dart';
+import 'package:munasabati/l10n/model_localizations.dart';
 import 'package:munasabati/models/booking_models.dart';
 import 'package:munasabati/route/route_constants.dart';
 import 'package:munasabati/services/booking_provider.dart';
@@ -24,6 +25,16 @@ class _ServiceListingScreenState extends State<ServiceListingScreen> {
   void initState() {
     super.initState();
     _selectedType = widget.serviceType;
+    _fetchServices();
+  }
+
+  Future<void> _fetchServices() async {
+    await context.read<BookingProvider>().fetchServices(
+          type: _selectedType,
+          searchQuery:
+              _searchController.text.isEmpty ? null : _searchController.text,
+          sortBy: _sortBy,
+        );
   }
 
   @override
@@ -45,13 +56,31 @@ class _ServiceListingScreenState extends State<ServiceListingScreen> {
           Expanded(
             child: Consumer<BookingProvider>(
               builder: (context, provider, _) {
-                final services = provider.getServices(
-                  type: _selectedType,
-                  searchQuery: _searchController.text.isEmpty
-                      ? null
-                      : _searchController.text,
-                  sortBy: _sortBy,
-                );
+                if (provider.isLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (provider.error != null) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.error_outline,
+                            size: 64, color: Colors.red),
+                        const SizedBox(height: 16),
+                        Text(context.maybeTr(provider.error!),
+                            style: Theme.of(context).textTheme.titleMedium),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: _fetchServices,
+                          child: Text(l10n.retry),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                final services = provider.services;
 
                 if (services.isEmpty) {
                   return Center(
@@ -100,7 +129,7 @@ class _ServiceListingScreenState extends State<ServiceListingScreen> {
         children: [
           TextField(
             controller: _searchController,
-            onChanged: (_) => setState(() {}),
+            onChanged: (_) => _fetchServices(),
             decoration: InputDecoration(
               hintText: l10n.searchServices,
               prefixIcon: const Icon(Icons.search),
@@ -115,9 +144,9 @@ class _ServiceListingScreenState extends State<ServiceListingScreen> {
               suffixIcon: _searchController.text.isNotEmpty
                   ? IconButton(
                       icon: const Icon(Icons.clear, size: 20),
-                      onPressed: () {
+                      onPressed: () async {
                         _searchController.clear();
-                        setState(() {});
+                        await _fetchServices();
                       },
                     )
                   : null,
@@ -131,31 +160,42 @@ class _ServiceListingScreenState extends State<ServiceListingScreen> {
                 _FilterChip(
                   label: l10n.all,
                   selected: _selectedType == null,
-                  onSelected: () => setState(() => _selectedType = null),
+                  onSelected: () async {
+                    setState(() => _selectedType = null);
+                    await _fetchServices();
+                  },
                 ),
                 _FilterChip(
                   label: l10n.halls,
                   selected: _selectedType == ServiceType.hall,
-                  onSelected: () =>
-                      setState(() => _selectedType = ServiceType.hall),
+                  onSelected: () async {
+                    setState(() => _selectedType = ServiceType.hall);
+                    await _fetchServices();
+                  },
                 ),
                 _FilterChip(
                   label: l10n.cars,
                   selected: _selectedType == ServiceType.car,
-                  onSelected: () =>
-                      setState(() => _selectedType = ServiceType.car),
+                  onSelected: () async {
+                    setState(() => _selectedType = ServiceType.car);
+                    await _fetchServices();
+                  },
                 ),
                 _FilterChip(
                   label: l10n.photographers,
                   selected: _selectedType == ServiceType.photographer,
-                  onSelected: () =>
-                      setState(() => _selectedType = ServiceType.photographer),
+                  onSelected: () async {
+                    setState(() => _selectedType = ServiceType.photographer);
+                    await _fetchServices();
+                  },
                 ),
                 _FilterChip(
                   label: l10n.entertainers,
                   selected: _selectedType == ServiceType.entertainer,
-                  onSelected: () =>
-                      setState(() => _selectedType = ServiceType.entertainer),
+                  onSelected: () async {
+                    setState(() => _selectedType = ServiceType.entertainer);
+                    await _fetchServices();
+                  },
                 ),
                 const SizedBox(width: 16),
                 DropdownButton<String>(
@@ -171,8 +211,11 @@ class _ServiceListingScreenState extends State<ServiceListingScreen> {
                     DropdownMenuItem(
                         value: 'reviews', child: Text(l10n.mostReviewed)),
                   ],
-                  onChanged: (val) {
-                    if (val != null) setState(() => _sortBy = val);
+                  onChanged: (val) async {
+                    if (val != null) {
+                      setState(() => _sortBy = val);
+                      await _fetchServices();
+                    }
                   },
                 ),
               ],
@@ -292,7 +335,7 @@ class _ServiceListCard extends StatelessWidget {
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
-                              service.serviceTypeLabel,
+                              service.serviceType.label(context),
                               style: Theme.of(context)
                                   .textTheme
                                   .labelSmall
@@ -340,7 +383,7 @@ class _ServiceListCard extends StatelessWidget {
                           ),
                           const Spacer(),
                           Text(
-                            '\$${service.basePrice.toInt()}',
+                            formatPrice(service.basePrice),
                             style: Theme.of(context)
                                 .textTheme
                                 .titleSmall

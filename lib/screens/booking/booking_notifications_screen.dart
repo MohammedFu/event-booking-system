@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:munasabati/constants.dart';
+import 'package:munasabati/l10n/app_localizations.dart';
 import 'package:munasabati/models/booking_models.dart';
 import 'package:munasabati/services/api_service_real.dart';
 
@@ -35,9 +36,10 @@ class _BookingNotificationsScreenState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Notifications'),
+        title: Text(l10n.notifications),
         actions: [
           TextButton(
             onPressed: () {
@@ -56,7 +58,7 @@ class _BookingNotificationsScreenState
                     .toList();
               });
             },
-            child: const Text('Mark all read'),
+            child: Text(l10n.markAllRead),
           ),
         ],
       ),
@@ -70,7 +72,7 @@ class _BookingNotificationsScreenState
                       Icon(Icons.notifications_none,
                           size: 64, color: Theme.of(context).disabledColor),
                       const SizedBox(height: defaultPadding),
-                      Text('No notifications',
+                      Text(l10n.noNotifications,
                           style: Theme.of(context).textTheme.titleMedium),
                     ],
                   ),
@@ -160,11 +162,17 @@ class _NotificationTile extends StatelessWidget {
     }
   }
 
-  String _timeAgo(DateTime dt) {
+  String _timeAgo(DateTime dt, BuildContext context) {
     final diff = DateTime.now().difference(dt);
-    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-    if (diff.inHours < 24) return '${diff.inHours}h ago';
-    if (diff.inDays < 7) return '${diff.inDays}d ago';
+    if (diff.inMinutes < 60) {
+      return '${diff.inMinutes}${AppLocalizations.of(context).translate('minutes_ago_suffix')}';
+    }
+    if (diff.inHours < 24) {
+      return '${diff.inHours}${AppLocalizations.of(context).translate('hours_ago_suffix')}';
+    }
+    if (diff.inDays < 7) {
+      return '${diff.inDays}${AppLocalizations.of(context).translate('days_ago_suffix')}';
+    }
     return '${dt.month}/${dt.day}';
   }
 
@@ -189,7 +197,7 @@ class _NotificationTile extends StatelessWidget {
       trailing: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(_timeAgo(notification.createdAt),
+          Text(_timeAgo(notification.createdAt, context),
               style: Theme.of(context).textTheme.bodySmall),
           if (!notification.isRead)
             Container(

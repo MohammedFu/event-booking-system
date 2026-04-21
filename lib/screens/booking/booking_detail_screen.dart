@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:munasabati/constants.dart';
+import 'package:munasabati/l10n/app_localizations.dart';
+import 'package:munasabati/l10n/model_localizations.dart';
 import 'package:munasabati/models/booking_models.dart';
 
 class BookingDetailScreen extends StatelessWidget {
@@ -11,7 +13,7 @@ class BookingDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(booking.eventName ?? 'Booking Details'),
+        title: Text(booking.eventName ?? context.tr('booking_details')),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(defaultPadding),
@@ -23,7 +25,7 @@ class BookingDetailScreen extends StatelessWidget {
             _buildEventInfo(context),
             const SizedBox(height: 24),
             Text(
-              'Booked Services',
+              context.tr('booked_services'),
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -43,7 +45,7 @@ class BookingDetailScreen extends StatelessWidget {
                     foregroundColor: errorColor,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
-                  child: const Text('Cancel Booking'),
+                  child: Text(context.tr('cancel_booking')),
                 ),
               ),
           ],
@@ -69,14 +71,14 @@ class BookingDetailScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  booking.statusLabel,
+                  booking.status.label(context),
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         color: booking.statusColor,
                         fontWeight: FontWeight.bold,
                       ),
                 ),
                 Text(
-                  _getStatusMessage(booking.status),
+                  booking.status.message(context),
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ],
@@ -103,29 +105,37 @@ class BookingDetailScreen extends StatelessWidget {
       ),
       child: Column(
         children: [
-          _infoRow(context, Icons.calendar_today, 'Event Date',
+          _infoRow(context, Icons.calendar_today, context.tr('event_date'),
               '${booking.eventDate.day}/${booking.eventDate.month}/${booking.eventDate.year}'),
           const Divider(height: 20),
-          _infoRow(context, Icons.category, 'Event Type',
-              booking.eventType.toUpperCase()),
+          _infoRow(
+            context,
+            Icons.category,
+            context.l10n.eventType,
+            localizedEventType(context, booking.eventType),
+          ),
           if (booking.eventName != null) ...[
             const Divider(height: 20),
-            _infoRow(
-                context, Icons.label, 'Event Name', booking.eventName!),
+            _infoRow(context, Icons.label, context.l10n.eventName,
+                booking.eventName!),
           ],
           if (booking.specialRequests != null &&
               booking.specialRequests!.isNotEmpty) ...[
             const Divider(height: 20),
-            _infoRow(context, Icons.note, 'Special Requests',
-                booking.specialRequests!),
+            _infoRow(
+              context,
+              Icons.note,
+              context.l10n.specialRequests,
+              booking.specialRequests!,
+            ),
           ],
         ],
       ),
     );
   }
 
-  Widget _infoRow(BuildContext context, IconData icon, String label,
-      String value) {
+  Widget _infoRow(
+      BuildContext context, IconData icon, String label, String value) {
     return Row(
       children: [
         Icon(icon, size: 18, color: primaryColor),
@@ -151,8 +161,8 @@ class BookingDetailScreen extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(defaultBorderRadious),
-        border: Border.all(
-            color: Theme.of(context).dividerColor.withOpacity(0.2)),
+        border:
+            Border.all(color: Theme.of(context).dividerColor.withOpacity(0.2)),
       ),
       child: Row(
         children: [
@@ -175,7 +185,7 @@ class BookingDetailScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  item.service?.title ?? 'Service',
+                  item.service?.title ?? context.tr('service'),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context)
@@ -235,7 +245,7 @@ class BookingDetailScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Payment Summary',
+            context.tr('payment_summary'),
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -244,9 +254,9 @@ class BookingDetailScreen extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Total Amount',
+              Text(context.tr('total_amount'),
                   style: Theme.of(context).textTheme.bodyMedium),
-              Text('\$${booking.totalAmount.toInt()}',
+              Text(formatPrice(booking.totalAmount),
                   style: Theme.of(context).textTheme.bodyMedium),
             ],
           ),
@@ -254,7 +264,7 @@ class BookingDetailScreen extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Deposit Paid',
+              Text(context.tr('deposit_paid'),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: const Color(0xFF2ED573),
                       )),
@@ -267,8 +277,8 @@ class BookingDetailScreen extends StatelessWidget {
           const SizedBox(height: 4),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-              Text('Remaining',
+            children: [
+              Text(context.tr('remaining'),
                   style: Theme.of(context).textTheme.bodySmall),
               Text('\$${remaining.toInt()}',
                   style: Theme.of(context).textTheme.bodySmall),
@@ -278,10 +288,12 @@ class BookingDetailScreen extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Deposit Status',
+              Text(context.tr('deposit_status'),
                   style: Theme.of(context).textTheme.bodyMedium),
               Text(
-                booking.depositPaid ? 'Paid' : 'Pending',
+                booking.depositPaid
+                    ? context.tr('status_paid')
+                    : context.tr('status_pending'),
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: booking.depositPaid
                           ? const Color(0xFF2ED573)
@@ -311,47 +323,27 @@ class BookingDetailScreen extends StatelessWidget {
     }
   }
 
-  String _getStatusMessage(BookingStatus status) {
-    switch (status) {
-      case BookingStatus.pending:
-        return 'Waiting for provider confirmation';
-      case BookingStatus.confirmed:
-        return 'All providers confirmed your booking';
-      case BookingStatus.inProgress:
-        return 'Your event is in progress';
-      case BookingStatus.completed:
-        return 'Your event has been completed';
-      case BookingStatus.cancelled:
-        return 'This booking has been cancelled';
-      case BookingStatus.refunded:
-        return 'Refund has been processed';
-      case BookingStatus.draft:
-        return 'This booking is still a draft';
-    }
-  }
-
   void _showCancelDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Cancel Booking'),
-        content: const Text(
-            'Are you sure you want to cancel this booking? Deposit refund policies apply.'),
+        title: Text(context.tr('cancel_booking')),
+        content: Text(context.tr('cancel_booking_confirm')),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Keep Booking'),
+            child: Text(context.tr('keep_booking')),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Booking cancellation requested'),
+                SnackBar(
+                  content: Text(context.tr('booking_cancellation_requested')),
                 ),
               );
             },
-            child: const Text('Cancel Booking',
+            child: Text(context.tr('cancel_booking'),
                 style: TextStyle(color: errorColor)),
           ),
         ],

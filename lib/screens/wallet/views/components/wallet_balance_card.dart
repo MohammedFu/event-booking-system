@@ -42,7 +42,7 @@ class WalletBalanceCard extends StatelessWidget {
                   ),
                   const SizedBox(height: defaultPadding / 2),
                   Text(
-                    "\$${balance.toStringAsFixed(2)}",
+                    formatPrice(balance),
                     style: Theme.of(context)
                         .textTheme
                         .headlineSmall!

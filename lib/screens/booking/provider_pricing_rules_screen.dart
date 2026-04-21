@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:munasabati/constants.dart';
 import 'package:munasabati/l10n/app_localizations.dart';
+import 'package:munasabati/l10n/model_localizations.dart';
 import 'package:munasabati/models/booking_models.dart';
 import 'package:munasabati/services/api_service_real.dart';
 
@@ -102,7 +103,7 @@ class _ProviderPricingRulesScreenState
                               children: [
                                 Icon(_ruleTypeIcon(t), size: 18),
                                 const SizedBox(width: 8),
-                                Text(t.name),
+                                Text(t.label(context)),
                               ],
                             ),
                           ))
@@ -169,7 +170,12 @@ class _ProviderPricingRulesScreenState
                   multiplier: multiplier,
                   fixedAdjustment: fixedAdjustment,
                 );
-                await _api.createPricingRule(rule);
+                await _api.createPricingRule(
+                  serviceId: rule.serviceId,
+                  ruleType: rule.ruleType,
+                  multiplier: rule.multiplier,
+                  fixedAdjustment: rule.fixedAdjustment,
+                );
                 setState(() => _rules.add(rule));
                 if (context.mounted) Navigator.pop(context);
               },
@@ -218,7 +224,7 @@ class _PricingRuleCard extends StatelessWidget {
         ),
         title: Row(
           children: [
-            Text(rule.ruleTypeLabel),
+            Text(rule.ruleType.label(context)),
             const SizedBox(width: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -244,7 +250,7 @@ class _PricingRuleCard extends StatelessWidget {
             if (rule.fixedAdjustment != 0)
               Text(
                 l10n.fixedAdjustmentValue(
-                  '${rule.fixedAdjustment > 0 ? '+' : ''}\$${rule.fixedAdjustment.toStringAsFixed(2)}',
+                  '${rule.fixedAdjustment > 0 ? '+' : ''}${formatPrice(rule.fixedAdjustment)}',
                 ),
               ),
             if (rule.startDate != null && rule.endDate != null)

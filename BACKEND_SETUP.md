@@ -125,12 +125,12 @@ flutter run
 
 | Role | Email | Password |
 |------|-------|----------|
-| Consumer | consumer@example.com | password123 |
-| Provider (Hall) | palace@example.com | password123 |
-| Provider (Car) | limo@example.com | password123 |
-| Provider (Photo) | photo@example.com | password123 |
-| Provider (DJ) | dj@example.com | password123 |
-| Admin | admin@eventbooker.com | password123 |
+| Consumer | consumer@eventbooker.com | EventBooker@2026 |
+| Provider (Hall) | Mohammed@eventbooker.com | EventBooker@2026 |
+| Provider (Car) | arhab@eventbooker.com | EventBooker@2026 |
+| Provider (Photo) | teshreen@eventbooker.com | EventBooker@2026 |
+| Provider (DJ) | dj@eventbooker.com | EventBooker@2026 |
+| Admin | admin@eventbooker.com | EventBooker@2026 |
 
 ---
 

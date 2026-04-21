@@ -8,9 +8,17 @@ class LogInForm extends StatelessWidget {
   const LogInForm({
     super.key,
     required this.formKey,
+    required this.emailController,
+    required this.passwordController,
+    this.rememberMe = false,
+    required this.onRememberMeChanged,
   });
 
   final GlobalKey<FormState> formKey;
+  final TextEditingController emailController;
+  final TextEditingController passwordController;
+  final bool rememberMe;
+  final ValueChanged<bool> onRememberMeChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -20,10 +28,8 @@ class LogInForm extends StatelessWidget {
       child: Column(
         children: [
           TextFormField(
-            onSaved: (emal) {
-              // Email
-            },
-            validator: emaildValidator.call,
+            controller: emailController,
+            validator: buildEmailValidator(l10n).call,
             textInputAction: TextInputAction.next,
             keyboardType: TextInputType.emailAddress,
             decoration: InputDecoration(
@@ -48,10 +54,8 @@ class LogInForm extends StatelessWidget {
           ),
           const SizedBox(height: defaultPadding),
           TextFormField(
-            onSaved: (pass) {
-              // Password
-            },
-            validator: passwordValidator.call,
+            controller: passwordController,
+            validator: buildPasswordValidator(l10n).call,
             obscureText: true,
             decoration: InputDecoration(
               hintText: l10n.password,
@@ -72,6 +76,16 @@ class LogInForm extends StatelessWidget {
                 ),
               ),
             ),
+          ),
+          const SizedBox(height: defaultPadding / 2),
+          Row(
+            children: [
+              Checkbox(
+                value: rememberMe,
+                onChanged: (value) => onRememberMeChanged(value ?? false),
+              ),
+              Text(l10n.rememberMe),
+            ],
           ),
         ],
       ),

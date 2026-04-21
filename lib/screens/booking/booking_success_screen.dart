@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:munasabati/constants.dart';
+import 'package:munasabati/l10n/app_localizations.dart';
 import 'package:munasabati/route/route_constants.dart';
 
 class BookingSuccessScreen extends StatelessWidget {
@@ -7,6 +8,7 @@ class BookingSuccessScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -29,14 +31,14 @@ class BookingSuccessScreen extends StatelessWidget {
               ),
               const SizedBox(height: 32),
               Text(
-                'Booking Confirmed!',
+                context.tr('booking_confirmed_exclamation'),
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
               ),
               const SizedBox(height: 16),
               Text(
-                'Your event has been successfully booked. All service providers have been notified and will confirm shortly.',
+                context.tr('booking_success_message_full'),
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       height: 1.5,
@@ -60,7 +62,7 @@ class BookingSuccessScreen extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Booking ID',
+                        Text(context.tr('booking_id'),
                             style: Theme.of(context).textTheme.bodySmall),
                         Text(
                           '#BK-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}',
@@ -74,7 +76,7 @@ class BookingSuccessScreen extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Status',
+                        Text(context.tr('status'),
                             style: Theme.of(context).textTheme.bodySmall),
                         Container(
                           padding: const EdgeInsets.symmetric(
@@ -83,8 +85,8 @@ class BookingSuccessScreen extends StatelessWidget {
                             color: const Color(0xFFFFBE21).withOpacity(0.2),
                             borderRadius: BorderRadius.circular(4),
                           ),
-                          child: const Text(
-                            'Pending Confirmation',
+                          child: Text(
+                            context.tr('pending_confirmation'),
                             style: TextStyle(
                               color: Color(0xFFFFBE21),
                               fontSize: 12,
@@ -98,10 +100,10 @@ class BookingSuccessScreen extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Deposit Paid',
+                        Text(context.tr('deposit_paid'),
                             style: Theme.of(context).textTheme.bodySmall),
                         Text(
-                          '25% - Confirmed',
+                          context.tr('deposit_confirmed_percent'),
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                 color: const Color(0xFF2ED573),
                                 fontWeight: FontWeight.w600,
@@ -122,7 +124,7 @@ class BookingSuccessScreen extends StatelessWidget {
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
-                  child: const Text('View My Bookings'),
+                  child: Text(context.tr('view_my_bookings')),
                 ),
               ),
               const SizedBox(height: 12),
@@ -139,7 +141,7 @@ class BookingSuccessScreen extends StatelessWidget {
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
-                  child: const Text('Back to Home'),
+                  child: Text(context.tr('back_to_home')),
                 ),
               ),
             ],

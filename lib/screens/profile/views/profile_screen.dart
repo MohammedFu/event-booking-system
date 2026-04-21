@@ -4,7 +4,10 @@ import 'package:munasabati/components/list_tile/divider_list_tile.dart';
 import 'package:munasabati/components/network_image_with_loader.dart';
 import 'package:munasabati/constants.dart';
 import 'package:munasabati/l10n/app_localizations.dart';
+import 'package:munasabati/route/route_constants.dart';
 import 'package:munasabati/route/screen_export.dart';
+import 'package:munasabati/services/auth_provider.dart';
+import 'package:provider/provider.dart';
 
 import 'components/profile_card.dart';
 import 'components/profile_menu_item_list_tile.dart';
@@ -157,7 +160,17 @@ class ProfileScreen extends StatelessWidget {
 
           // Log Out
           ListTile(
-            onTap: () {},
+            onTap: () async {
+              final auth = context.read<AuthProvider>();
+              await auth.logout();
+              if (context.mounted) {
+                Navigator.pushNamedAndRemoveUntil(
+                  context,
+                  logInScreenRoute,
+                  (route) => false,
+                );
+              }
+            },
             minLeadingWidth: 24,
             leading: SvgPicture.asset(
               "assets/icons/Logout.svg",

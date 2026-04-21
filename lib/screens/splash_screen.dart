@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:munasabati/l10n/app_localizations.dart';
+import 'package:munasabati/models/booking_models.dart';
 import 'package:munasabati/route/route_constants.dart';
+import 'package:munasabati/services/auth_provider.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -24,18 +27,25 @@ class _SplashScreenState extends State<SplashScreen> {
     final prefs = await SharedPreferences.getInstance();
     final isFirstLaunch = prefs.getBool('is_first_launch') ?? true;
 
-    if (isFirstLaunch) {
+    if (!mounted) return;
+
+    final auth = context.read<AuthProvider>();
+
+    if (auth.isAuthenticated) {
+      final isProvider = auth.user?.role == UserRole.provider;
+      Navigator.pushReplacementNamed(
+        context,
+        isProvider ? providerEntryPointScreenRoute : entryPointScreenRoute,
+      );
+    } else if (isFirstLaunch) {
       // Mark that onboarding has been shown
       await prefs.setBool('is_first_launch', false);
+      if (!mounted) return;
       // Navigate to onboarding
-      if (mounted) {
-        Navigator.pushReplacementNamed(context, onbordingScreenRoute);
-      }
+      Navigator.pushReplacementNamed(context, onbordingScreenRoute);
     } else {
-      // Navigate directly to login (or main app)
-      if (mounted) {
-        Navigator.pushReplacementNamed(context, logInScreenRoute);
-      }
+      // Navigate to login
+      Navigator.pushReplacementNamed(context, logInScreenRoute);
     }
   }
 

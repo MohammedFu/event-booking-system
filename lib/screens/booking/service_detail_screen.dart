@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:munasabati/constants.dart';
 import 'package:munasabati/l10n/app_localizations.dart';
+import 'package:munasabati/l10n/model_localizations.dart';
 import 'package:munasabati/models/booking_models.dart';
 import 'package:munasabati/route/route_constants.dart';
 import 'package:munasabati/services/booking_provider.dart';
@@ -115,7 +116,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
-                          service.serviceTypeLabel,
+                          service.serviceType.label(context),
                           style: Theme.of(context)
                               .textTheme
                               .labelSmall
@@ -172,7 +173,10 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                                   ),
                         ),
                         Text(
-                          ' (${service.provider!.reviewCount} reviews)',
+                          ' (${context.tr('reviews_count_compact', params: {
+                                'count':
+                                    service.provider!.reviewCount.toString(),
+                              })})',
                           style:
                               Theme.of(context).textTheme.bodySmall?.copyWith(
                                     color: Theme.of(context)
@@ -254,7 +258,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
               ),
               const SizedBox(height: 4),
               Text(
-                '\$${service.basePrice.toInt()}',
+                formatPrice(service.basePrice),
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                       color: primaryColor,
                       fontWeight: FontWeight.bold,
@@ -267,13 +271,19 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                _pricingModelLabel(service.pricingModel),
+                service.pricingModel.label(context),
                 style: Theme.of(context).textTheme.labelSmall,
               ),
               const SizedBox(height: 4),
               Text(
-                'Min ${service.minDurationHours}h'
-                '${service.maxDurationHours != null ? ' - Max ${service.maxDurationHours}h' : ''}',
+                service.maxDurationHours == null
+                    ? context.tr('min_duration_value', params: {
+                        'value': service.minDurationHours.toString(),
+                      })
+                    : context.tr('duration_range_value', params: {
+                        'min': service.minDurationHours.toString(),
+                        'max': service.maxDurationHours.toString(),
+                      }),
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ],
@@ -308,15 +318,24 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
     switch (service.serviceType) {
       case ServiceType.hall:
         if (attrs.capacity != null)
-          items.add(_attrItem(Icons.people, 'Capacity: ${attrs.capacity}'));
+          items.add(_attrItem(
+            Icons.people,
+            context.tr('capacity_value', params: {
+              'value': attrs.capacity.toString(),
+            }),
+          ));
         if (attrs.theme != null)
-          items.add(_attrItem(Icons.palette, 'Theme: ${attrs.theme}'));
+          items.add(_attrItem(
+            Icons.palette,
+            context.tr('theme_value', params: {'value': attrs.theme!}),
+          ));
         if (attrs.hasStage == true)
-          items.add(_attrItem(Icons.theater_comedy, 'Stage Available'));
+          items.add(
+              _attrItem(Icons.theater_comedy, context.l10n.stageAvailable));
         if (attrs.hasParking == true)
-          items.add(_attrItem(Icons.local_parking, 'Parking'));
+          items.add(_attrItem(Icons.local_parking, context.l10n.parking));
         if (attrs.hasKitchen == true)
-          items.add(_attrItem(Icons.kitchen, 'Kitchen'));
+          items.add(_attrItem(Icons.kitchen, context.l10n.kitchen));
         for (final a in attrs.amenities)
           items.add(_attrItem(Icons.check_circle, a, small: true));
       case ServiceType.car:
@@ -328,22 +347,31 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
         if (attrs.color != null)
           items.add(_attrItem(Icons.color_lens, attrs.color!));
         if (attrs.maxPassengers != null)
-          items.add(_attrItem(Icons.airline_seat_recline_normal,
-              '${attrs.maxPassengers} passengers'));
+          items.add(_attrItem(
+            Icons.airline_seat_recline_normal,
+            context.tr('passengers_value', params: {
+              'value': attrs.maxPassengers.toString(),
+            }),
+          ));
         for (final f in attrs.features)
           items.add(_attrItem(Icons.check_circle, f, small: true));
       case ServiceType.photographer:
         for (final s in attrs.specialties)
           items.add(_attrItem(Icons.camera, s, small: true));
         if (attrs.editingIncluded == true)
-          items.add(_attrItem(Icons.edit, 'Editing Included'));
+          items.add(_attrItem(Icons.edit, context.l10n.editingIncluded));
         for (final e in attrs.equipment)
           items.add(_attrItem(Icons.settings, e, small: true));
       case ServiceType.entertainer:
         if (attrs.performerType != null)
           items.add(_attrItem(Icons.person, attrs.performerType!));
         if (attrs.groupSize != null)
-          items.add(_attrItem(Icons.group, '${attrs.groupSize} performers'));
+          items.add(_attrItem(
+            Icons.group,
+            context.tr('performers_value', params: {
+              'value': attrs.groupSize.toString(),
+            }),
+          ));
         for (final g in attrs.genres)
           items.add(_attrItem(Icons.music_note, g, small: true));
     }
@@ -519,7 +547,10 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                         Icon(Icons.star, size: 14, color: Colors.amber),
                         const SizedBox(width: 4),
                         Text(
-                          '${service.provider!.rating} (${service.provider!.reviewCount} reviews)',
+                          '${service.provider!.rating} (${context.tr('reviews_count_compact', params: {
+                                'count':
+                                    service.provider!.reviewCount.toString(),
+                              })})',
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
                       ],
@@ -560,18 +591,28 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
             ],
           ),
           const SizedBox(height: 8),
-          _policyRow(Icons.check_circle_outline, Colors.green,
-              'Free cancellation up to ${policy.freeCancellationHours}h before'),
+          _policyRow(
+              Icons.check_circle_outline,
+              Colors.green,
+              context.tr('free_cancellation_before', params: {
+                'hours': policy.freeCancellationHours.toString(),
+              })),
           const SizedBox(height: 4),
-          _policyRow(Icons.info_outline, Colors.orange,
-              '${policy.partialRefundPercentage.toInt()}% refund after that'),
+          _policyRow(
+              Icons.info_outline,
+              Colors.orange,
+              context.tr('refund_after_that', params: {
+                'percent': policy.partialRefundPercentage.toInt().toString(),
+              })),
           const SizedBox(height: 4),
           _policyRow(
             policy.depositRefundable
                 ? Icons.check_circle_outline
                 : Icons.cancel_outlined,
             policy.depositRefundable ? Colors.green : Colors.red,
-            'Deposit ${policy.depositRefundable ? 'is' : 'is not'} refundable',
+            policy.depositRefundable
+                ? context.tr('deposit_is_refundable')
+                : context.tr('deposit_not_refundable'),
           ),
         ],
       ),
@@ -612,14 +653,14 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '\$${service.basePrice.toInt()}',
+                  formatPrice(service.basePrice),
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         color: primaryColor,
                         fontWeight: FontWeight.bold,
                       ),
                 ),
                 Text(
-                  _pricingModelLabel(service.pricingModel),
+                  service.pricingModel.label(context),
                   style: Theme.of(context).textTheme.labelSmall,
                 ),
               ],
@@ -644,19 +685,5 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
         ),
       ),
     );
-  }
-
-  String _pricingModelLabel(PricingModel model) {
-    final l10n = AppLocalizations.of(context);
-    switch (model) {
-      case PricingModel.flat:
-        return l10n.flatRate;
-      case PricingModel.hourly:
-        return l10n.perHour;
-      case PricingModel.perEvent:
-        return l10n.perEvent;
-      case PricingModel.tiered:
-        return l10n.tieredPricing;
-    }
   }
 }

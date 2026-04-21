@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:munasabati/constants.dart';
 import 'package:munasabati/l10n/app_localizations.dart';
+import 'package:munasabati/l10n/model_localizations.dart';
 import 'package:munasabati/models/booking_models.dart';
 import 'package:munasabati/route/route_constants.dart';
 import 'package:munasabati/services/booking_provider.dart';
@@ -283,7 +284,7 @@ class _CartItemCard extends StatelessWidget {
                           size: 14, color: primaryColor),
                       const SizedBox(width: 4),
                       Text(
-                        service.serviceTypeLabel,
+                        service.serviceType.label(context),
                         style: Theme.of(context).textTheme.labelSmall,
                       ),
                     ],
@@ -315,7 +316,9 @@ class _CartItemCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${item.durationHours}h',
+                  context.tr('duration_hours_value', params: {
+                    'value': item.durationHours.toString(),
+                  }),
                   style: Theme.of(context).textTheme.labelSmall,
                 ),
                 IconButton(

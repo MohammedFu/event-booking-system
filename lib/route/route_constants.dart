@@ -75,6 +75,7 @@ const String providerAvailabilityScreenRoute = "provider_availability";
 const String providerPricingRulesScreenRoute = "provider_pricing_rules";
 const String providerServiceManagementScreenRoute =
     "provider_service_management";
+const String providerEntryPointScreenRoute = "provider_entry_point";
 const String bookingSearchScreenRoute = "booking_search";
 const String bookingNotificationsScreenRoute = "booking_notifications";
 const String bookingReviewsScreenRoute = "booking_reviews";

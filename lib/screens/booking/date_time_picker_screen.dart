@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:munasabati/constants.dart';
+import 'package:munasabati/l10n/app_localizations.dart';
+import 'package:munasabati/l10n/model_localizations.dart';
 import 'package:munasabati/models/booking_models.dart';
 import 'package:munasabati/route/route_constants.dart';
 import 'package:munasabati/services/booking_provider.dart';
@@ -19,6 +21,26 @@ class _DateTimePickerScreenState extends State<DateTimePickerScreen> {
   TimeOfDay? _selectedStartTime;
   TimeOfDay? _selectedEndTime;
   final _specialRequestsController = TextEditingController();
+  late Future<List<TimeSlot>> _slotsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _slotsFuture = _fetchSlots();
+  }
+
+  Future<List<TimeSlot>> _fetchSlots() async {
+    final provider = context.read<BookingProvider>();
+    return await provider.fetchAvailableSlots(widget.service.id, _selectedDate);
+  }
+
+  void _refreshSlots() {
+    setState(() {
+      _selectedStartTime = null;
+      _selectedEndTime = null;
+      _slotsFuture = _fetchSlots();
+    });
+  }
 
   @override
   void dispose() {
@@ -29,68 +51,81 @@ class _DateTimePickerScreenState extends State<DateTimePickerScreen> {
   @override
   Widget build(BuildContext context) {
     final service = widget.service;
-    final provider = context.read<BookingProvider>();
-    final availableSlots =
-        provider.getAvailableSlots(service.id, _selectedDate);
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Select Date & Time'),
+        title: Text(l10n.selectDateTime),
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(defaultPadding),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildServiceSummary(context, service),
-                  const SizedBox(height: 24),
-                  Text(
-                    'Select Date',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                  const SizedBox(height: 12),
-                  _buildDatePicker(context),
-                  const SizedBox(height: 24),
-                  Text(
-                    'Available Time Slots',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                  const SizedBox(height: 12),
-                  _buildTimeSlots(context, availableSlots),
-                  const SizedBox(height: 24),
-                  Text(
-                    'Special Requests (Optional)',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: _specialRequestsController,
-                    maxLines: 3,
-                    decoration: InputDecoration(
-                      hintText:
-                          'Any special requirements or preferences...',
-                      border: OutlineInputBorder(
-                        borderRadius:
-                            BorderRadius.circular(defaultBorderRadious),
+      body: FutureBuilder<List<TimeSlot>>(
+        future: _slotsFuture,
+        builder: (context, snapshot) {
+          return Column(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(defaultPadding),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildServiceSummary(context, service),
+                      const SizedBox(height: 24),
+                      Text(
+                        context.tr('select_date'),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
                       ),
-                    ),
+                      const SizedBox(height: 12),
+                      _buildDatePicker(context),
+                      const SizedBox(height: 24),
+                      Text(
+                        context.tr('available_time_slots'),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                      ),
+                      const SizedBox(height: 12),
+                      if (snapshot.connectionState == ConnectionState.waiting)
+                        const Center(child: CircularProgressIndicator())
+                      else if (snapshot.hasError)
+                        Text(context.tr('error_with_message',
+                            params: {'message': snapshot.error.toString()}))
+                      else if (snapshot.hasData)
+                        _buildTimeSlots(context, snapshot.data!)
+                      else
+                        Text(context.tr('no_slots_available')),
+                      const SizedBox(height: 24),
+                      Text(
+                        context.tr('special_requests_optional'),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: _specialRequestsController,
+                        maxLines: 3,
+                        decoration: InputDecoration(
+                          hintText: context.tr('special_requests_hint'),
+                          border: OutlineInputBorder(
+                            borderRadius:
+                                BorderRadius.circular(defaultBorderRadious),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 80),
+                    ],
                   ),
-                  const SizedBox(height: 80),
-                ],
+                ),
               ),
-            ),
-          ),
-          _buildBottomBar(context, service, provider),
-        ],
+              _buildBottomBar(context, service),
+            ],
+          );
+        },
       ),
     );
   }
@@ -118,11 +153,12 @@ class _DateTimePickerScreenState extends State<DateTimePickerScreen> {
               height: 60,
               child: service.images.isNotEmpty
                   ? Image.network(service.images.first,
-                      fit: BoxFit.cover, errorBuilder: (_, __, ___) => Container(
-                        color: primaryColor.withOpacity(0.1),
-                        child: Icon(service.serviceTypeIcon,
-                            color: primaryColor, size: 24),
-                      ))
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Container(
+                            color: primaryColor.withOpacity(0.1),
+                            child: Icon(service.serviceTypeIcon,
+                                color: primaryColor, size: 24),
+                          ))
                   : Container(
                       color: primaryColor.withOpacity(0.1),
                       child: Icon(service.serviceTypeIcon,
@@ -142,7 +178,7 @@ class _DateTimePickerScreenState extends State<DateTimePickerScreen> {
                       ),
                 ),
                 Text(
-                  '\$${service.basePrice.toInt()} ${service.pricingModel == PricingModel.hourly ? "/hr" : service.pricingModel == PricingModel.perEvent ? "/event" : ""}',
+                  '${formatPrice(service.basePrice)} ${service.pricingModel.suffix(context)}',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: primaryColor,
                         fontWeight: FontWeight.w600,
@@ -168,9 +204,8 @@ class _DateTimePickerScreenState extends State<DateTimePickerScreen> {
         if (date != null) {
           setState(() {
             _selectedDate = date;
-            _selectedStartTime = null;
-            _selectedEndTime = null;
           });
+          _refreshSlots();
         }
       },
       borderRadius: BorderRadius.circular(defaultBorderRadious),
@@ -257,8 +292,8 @@ class _DateTimePickerScreenState extends State<DateTimePickerScreen> {
 
   ServiceModel get service => widget.service;
 
-  Widget _buildBottomBar(BuildContext context, ServiceModel service,
-      BookingProvider provider) {
+  Widget _buildBottomBar(BuildContext context, ServiceModel service) {
+    final provider = context.read<BookingProvider>();
     final canAdd = _selectedStartTime != null && _selectedEndTime != null;
 
     return Container(
@@ -284,7 +319,7 @@ class _DateTimePickerScreenState extends State<DateTimePickerScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Estimated total:',
+                      context.tr('estimated_total'),
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                     Text(
@@ -309,7 +344,7 @@ class _DateTimePickerScreenState extends State<DateTimePickerScreen> {
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
-                    child: const Text('Add & Browse More'),
+                    child: Text(context.tr('add_and_browse_more')),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -323,7 +358,7 @@ class _DateTimePickerScreenState extends State<DateTimePickerScreen> {
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
-                    child: const Text('Add to Cart'),
+                    child: Text(context.tr('add_to_cart')),
                   ),
                 ),
               ],
@@ -335,16 +370,17 @@ class _DateTimePickerScreenState extends State<DateTimePickerScreen> {
   }
 
   String _calculatePrice(ServiceModel service) {
-    if (_selectedStartTime == null || _selectedEndTime == null) return '\$0';
+    if (_selectedStartTime == null || _selectedEndTime == null)
+      return formatPrice(0);
     final durationMinutes =
         (_selectedEndTime!.hour * 60 + _selectedEndTime!.minute) -
             (_selectedStartTime!.hour * 60 + _selectedStartTime!.minute);
     final durationHours = durationMinutes / 60.0;
 
     if (service.pricingModel == PricingModel.hourly) {
-      return '\$${(service.basePrice * durationHours).toInt()}';
+      return formatPrice(service.basePrice * durationHours);
     }
-    return '\$${service.basePrice.toInt()}';
+    return formatPrice(service.basePrice);
   }
 
   void _addToCartAndContinue(BuildContext context, BookingProvider provider) {
@@ -368,9 +404,12 @@ class _DateTimePickerScreenState extends State<DateTimePickerScreen> {
     provider.addToCart(item);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('${service.title} added to booking cart'),
+        content: Text(
+          context
+              .tr('added_to_booking_cart', params: {'service': service.title}),
+        ),
         action: SnackBarAction(
-          label: 'Undo',
+          label: context.tr('undo'),
           onPressed: () => provider.removeFromCart(service.id),
         ),
       ),
@@ -404,8 +443,7 @@ class _DateTimePickerScreenState extends State<DateTimePickerScreen> {
     if (_selectedStartTime == null || _selectedEndTime == null) return 1;
     final startMinutes =
         _selectedStartTime!.hour * 60 + _selectedStartTime!.minute;
-    final endMinutes =
-        _selectedEndTime!.hour * 60 + _selectedEndTime!.minute;
+    final endMinutes = _selectedEndTime!.hour * 60 + _selectedEndTime!.minute;
     return (endMinutes - startMinutes) / 60.0;
   }
 
@@ -413,12 +451,12 @@ class _DateTimePickerScreenState extends State<DateTimePickerScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Time Conflict'),
+        title: Text(context.tr('time_conflict')),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('This time slot conflicts with:'),
+            Text(context.tr('time_conflicts_with')),
             const SizedBox(height: 8),
             ...conflicts.map((c) => Padding(
                   padding: const EdgeInsets.only(bottom: 4),
@@ -435,7 +473,7 @@ class _DateTimePickerScreenState extends State<DateTimePickerScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
+            child: Text(AppLocalizations.of(context).ok),
           ),
         ],
       ),

@@ -5,6 +5,7 @@ import 'package:munasabati/components/cart_button.dart';
 import 'package:munasabati/components/custom_modal_bottom_sheet.dart';
 import 'package:munasabati/components/product/product_card.dart';
 import 'package:munasabati/constants.dart';
+import 'package:munasabati/l10n/app_localizations.dart';
 import 'package:munasabati/screens/product/views/product_returns_screen.dart';
 
 import 'package:munasabati/route/screen_export.dart';
@@ -37,7 +38,7 @@ class ProductDetailsScreen extends StatelessWidget {
             )
           :
 
-          /// If profuct is not available then show [NotifyMeCard]
+          /// If product is not available then show [NotifyMeCard]
           NotifyMeCard(
               isNotify: false,
               onChanged: (value) {},
@@ -51,8 +52,10 @@ class ProductDetailsScreen extends StatelessWidget {
               actions: [
                 IconButton(
                   onPressed: () {},
-                  icon: SvgPicture.asset("assets/icons/Bookmark.svg",
-                      color: Theme.of(context).textTheme.bodyLarge!.color),
+                  icon: SvgPicture.asset(
+                    "assets/icons/Bookmark.svg",
+                    color: Theme.of(context).textTheme.bodyLarge!.color,
+                  ),
                 ),
               ],
             ),
@@ -60,29 +63,29 @@ class ProductDetailsScreen extends StatelessWidget {
               images: [productDemoImg1, productDemoImg2, productDemoImg3],
             ),
             ProductInfo(
-              brand: "LIPSY LONDON",
-              title: "Sleeveless Ruffle",
+              brand: context.tr('demo_product_brand'),
+              title: context.tr('demo_product_title'),
               isAvailable: isProductAvailable,
-              description:
-                  "A cool gray cap in soft corduroy. Watch me.' By buying cotton products from Lindex, you’re supporting more responsibly...",
+              description: context.tr('demo_product_description'),
               rating: 4.4,
               numOfReviews: 126,
             ),
             ProductListTile(
               svgSrc: "assets/icons/Product.svg",
-              title: "Product Details",
+              title: AppLocalizations.of(context).productDetails,
               press: () {
                 customModalBottomSheet(
                   context,
                   height: MediaQuery.of(context).size.height * 0.92,
                   child: const BuyFullKit(
-                      images: ["assets/screens/Product detail.png"]),
+                    images: ["assets/screens/Product detail.png"],
+                  ),
                 );
               },
             ),
             ProductListTile(
               svgSrc: "assets/icons/Delivery.svg",
-              title: "Shipping Information",
+              title: AppLocalizations.of(context).shippingInformation,
               press: () {
                 customModalBottomSheet(
                   context,
@@ -95,7 +98,7 @@ class ProductDetailsScreen extends StatelessWidget {
             ),
             ProductListTile(
               svgSrc: "assets/icons/Return.svg",
-              title: "Returns",
+              title: AppLocalizations.of(context).returns,
               isShowBottomBorder: true,
               press: () {
                 customModalBottomSheet(
@@ -121,7 +124,7 @@ class ProductDetailsScreen extends StatelessWidget {
             ),
             ProductListTile(
               svgSrc: "assets/icons/Chat.svg",
-              title: "Reviews",
+              title: AppLocalizations.of(context).reviews,
               isShowBottomBorder: true,
               press: () {
                 Navigator.pushNamed(context, productReviewsScreenRoute);
@@ -131,7 +134,7 @@ class ProductDetailsScreen extends StatelessWidget {
               padding: const EdgeInsets.all(defaultPadding),
               sliver: SliverToBoxAdapter(
                 child: Text(
-                  "You may also like",
+                  context.tr('you_may_also_like'),
                   style: Theme.of(context).textTheme.titleSmall!,
                 ),
               ),
@@ -144,12 +147,13 @@ class ProductDetailsScreen extends StatelessWidget {
                   itemCount: 5,
                   itemBuilder: (context, index) => Padding(
                     padding: EdgeInsets.only(
-                        left: defaultPadding,
-                        right: index == 4 ? defaultPadding : 0),
+                      left: defaultPadding,
+                      right: index == 4 ? defaultPadding : 0,
+                    ),
                     child: ProductCard(
                       image: productDemoImg2,
-                      title: "Sleeveless Tiered Dobby Swing Dress",
-                      brandName: "LIPSY LONDON",
+                      title: context.tr('demo_related_product_title'),
+                      brandName: context.tr('demo_product_brand'),
                       price: 24.65,
                       priceAfetDiscount: index.isEven ? 20.99 : null,
                       dicountpercent: index.isEven ? 25 : null,
@@ -161,7 +165,7 @@ class ProductDetailsScreen extends StatelessWidget {
             ),
             const SliverToBoxAdapter(
               child: SizedBox(height: defaultPadding),
-            )
+            ),
           ],
         ),
       ),

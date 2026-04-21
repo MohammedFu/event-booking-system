@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:munasabati/constants.dart';
 import 'package:munasabati/l10n/app_localizations.dart';
+import 'package:munasabati/models/booking_models.dart';
 import 'package:munasabati/route/route_constants.dart' as routes;
 import 'package:munasabati/services/auth_provider.dart';
 import 'package:provider/provider.dart';
@@ -162,7 +163,7 @@ class _AuthScreenState extends State<AuthScreen>
                   Padding(
                     padding: const EdgeInsets.only(bottom: defaultPadding),
                     child: Text(
-                      auth.error!,
+                      context.maybeTr(auth.error!),
                       style: const TextStyle(color: Colors.red, fontSize: 14),
                     ),
                   ),
@@ -291,7 +292,7 @@ class _AuthScreenState extends State<AuthScreen>
                   Padding(
                     padding: const EdgeInsets.only(bottom: defaultPadding),
                     child: Text(
-                      auth.error!,
+                      context.maybeTr(auth.error!),
                       style: const TextStyle(color: Colors.red, fontSize: 14),
                     ),
                   ),
@@ -323,7 +324,10 @@ class _AuthScreenState extends State<AuthScreen>
     );
 
     if (success && mounted) {
-      Navigator.pushReplacementNamed(context, routes.bookingHomeScreenRoute);
+      final routeName = auth.user?.role == UserRole.provider
+          ? routes.providerEntryPointScreenRoute
+          : routes.entryPointScreenRoute;
+      Navigator.pushReplacementNamed(context, routeName);
     }
   }
 
@@ -339,7 +343,10 @@ class _AuthScreenState extends State<AuthScreen>
     );
 
     if (success && mounted) {
-      Navigator.pushReplacementNamed(context, routes.bookingHomeScreenRoute);
+      final routeName = auth.user?.role == UserRole.provider
+          ? routes.providerEntryPointScreenRoute
+          : routes.entryPointScreenRoute;
+      Navigator.pushReplacementNamed(context, routeName);
     }
   }
 

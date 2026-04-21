@@ -124,13 +124,13 @@ Key entities:
 ## Test Credentials (After Seeding)
 
 ```
-Admin: admin@eventbooker.com / password123
-Consumer: consumer@example.com / password123
+Admin: admin@eventbooker.com / EventBooker@2026
+Consumer: consumer@eventbooker.com / EventBooker@2026
 Providers:
-  - Mohammed@eventbooker.com / password123 (Hall provider)
-  - arhab@eventbooker.com / password123 (Car provider)
-  - teshreen@eventbooker.com / password123 (Photographer)
-  - dj@eventbooker.com / password123 (Entertainer)
+  - Mohammed@eventbooker.com / EventBooker@2026 (Hall provider)
+  - arhab@eventbooker.com / EventBooker@2026 (Car provider)
+  - teshreen@eventbooker.com / EventBooker@2026 (Photographer)
+  - dj@eventbooker.com / EventBooker@2026 (Entertainer)
 ```
 
 ## Scripts

@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -12,12 +14,33 @@ class DioClient {
 
   late Dio _dio;
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
+  bool _isRefreshing = false;
 
   // API Configuration
-  static const String _baseUrl =
-      'http://localhost:3000'; // Change to your backend URL
-  static const Duration _defaultTimeout = Duration(seconds: 30);
-  static const Duration _receiveTimeout = Duration(seconds: 30);
+  // For iOS Simulator: use localhost
+  // For Android Emulator: use 10.0.2.2
+  // For physical Android device: use your computer's WiFi IP (e.g., 192.168.1.xxx)
+  //
+  // IMPORTANT: Set this to your computer's actual IP address:
+  static const String _computerIp = '192.168.0.186'; // <-- CHANGE THIS!
+
+  static String get _baseUrl {
+    if (kIsWeb) return 'http://$_computerIp:3000';
+
+    try {
+      if (defaultTargetPlatform == TargetPlatform.android) {
+        // If using physical device, use your computer's IP
+        return 'http://$_computerIp:3000';
+      }
+    } catch (e) {
+      // Platform not available
+    }
+
+    return 'http://localhost:3000'; // iOS simulator or fallback
+  }
+
+  static const Duration _defaultTimeout = Duration(seconds: 10);
+  static const Duration _receiveTimeout = Duration(seconds: 10);
 
   // Token storage keys
   static const String _accessTokenKey = 'access_token';
@@ -76,9 +99,12 @@ class DioClient {
         return handler.next(options);
       },
       onError: (error, handler) async {
-        // Handle 401 Unauthorized - try to refresh token
-        if (error.response?.statusCode == 401) {
+        // Handle 401 Unauthorized - try to refresh token (only once)
+        if (error.response?.statusCode == 401 && !_isRefreshing) {
+          _isRefreshing = true;
           final refreshed = await _refreshToken();
+          _isRefreshing = false;
+
           if (refreshed) {
             // Retry original request with new token
             final token = await _secureStorage.read(key: _accessTokenKey);
@@ -96,9 +122,8 @@ class DioClient {
 
             return handler.resolve(response);
           } else {
-            // Token refresh failed, clear tokens and redirect to login
+            // Token refresh failed, clear tokens
             await clearTokens();
-            // TODO: Navigate to login screen
           }
         }
         return handler.next(error);

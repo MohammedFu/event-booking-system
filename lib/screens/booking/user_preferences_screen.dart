@@ -17,37 +17,37 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
   bool _isLoading = true;
 
   final _hallThemes = [
-    'Modern',
-    'Classic',
-    'Rustic',
-    'Garden',
-    'Beach',
-    'Industrial'
+    'حديث',
+    'كلاسيكي',
+    'ريفي',
+    'حديقة',
+    'شاطئ',
+    'صناعي'
   ];
-  final _carTypes = ['Luxury', 'Vintage', 'Sports', 'SUV', 'Limo', 'Classic'];
+  final _carTypes = ['فاخر', 'كلاسيكي قديم', 'رياضي', 'دفع رباعي', 'ليموزين', 'عتيق'];
   final _photoStyles = [
-    'Documentary',
-    'Traditional',
-    'Fine Art',
-    'Editorial',
-    'Dark & Moody',
-    'Light & Airy'
+    'تسجيلي',
+    'تقليدي',
+    'فني راقي',
+    'تحريري',
+    'داكن ومليء بالمشاعر',
+    'فاتح وجيد التهوية'
   ];
   final _entertainerTypes = [
-    'DJ',
-    'Live Band',
-    'Singer',
-    'Dancer',
-    'Comedian',
-    'Magician'
+    'دي جي',
+    'فرقة موسيقية حية',
+    'مطرب',
+    'راقص',
+    'كوميدي',
+    'ساحر'
   ];
   final _cities = [
-    'New York',
-    'Los Angeles',
-    'Chicago',
-    'Miami',
-    'Las Vegas',
-    'San Francisco'
+    'صنعاء',
+    'تعز',
+    'الحديدة',
+    'عدن',
+    'إب',
+    'عمران'
   ];
   final _budgetRanges = const [
     BudgetRange(min: 0, max: 5000),
@@ -196,8 +196,8 @@ class _UserPreferencesScreenState extends State<UserPreferencesScreen> {
                               _preferences.budgetRange.max == range.max;
                       return ChoiceChip(
                         label: Text(range.max == double.infinity
-                            ? '\$${range.min.toStringAsFixed(0)}+'
-                            : '\$${range.min.toStringAsFixed(0)} - \$${range.max.toStringAsFixed(0)}'),
+                            ? 'ي.ر ${range.min.toStringAsFixed(0)}+'
+                            : 'ي.ر ${range.min.toStringAsFixed(0)} - ي.ر ${range.max.toStringAsFixed(0)}'),
                         selected: isSelected,
                         onSelected: (_) {
                           setState(() {

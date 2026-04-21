@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:munasabati/constants.dart';
+import 'package:munasabati/l10n/app_localizations.dart';
+import 'package:munasabati/l10n/model_localizations.dart';
 import 'package:munasabati/models/booking_models.dart';
 import 'package:munasabati/services/api_service_real.dart';
 
@@ -78,7 +80,7 @@ class _ProviderAvailabilityScreenState
           padding: const EdgeInsets.all(defaultPadding),
           child: ElevatedButton(
             onPressed: () => _saveChanges(),
-            child: const Text('Save Changes'),
+            child: Text(AppLocalizations.of(context).saveChanges),
           ),
         ),
       ),
@@ -105,11 +107,11 @@ class _ProviderAvailabilityScreenState
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(template.dayLabel,
+              Text(template.localizedDay(context),
                   style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: defaultPadding),
               ListTile(
-                title: const Text('Start Time'),
+                title: Text(context.tr('start_time')),
                 trailing: Text(
                   '${startTime.hour.toString().padLeft(2, '0')}:${startTime.minute.toString().padLeft(2, '0')}',
                   style: Theme.of(context).textTheme.titleSmall,
@@ -125,7 +127,7 @@ class _ProviderAvailabilityScreenState
                 },
               ),
               ListTile(
-                title: const Text('End Time'),
+                title: Text(context.tr('end_time')),
                 trailing: Text(
                   '${endTime.hour.toString().padLeft(2, '0')}:${endTime.minute.toString().padLeft(2, '0')}',
                   style: Theme.of(context).textTheme.titleSmall,
@@ -155,7 +157,7 @@ class _ProviderAvailabilityScreenState
                   });
                   Navigator.pop(context);
                 },
-                child: const Text('Update'),
+                child: Text(context.tr('update')),
               ),
             ],
           ),
@@ -166,11 +168,11 @@ class _ProviderAvailabilityScreenState
 
   Future<void> _saveChanges() async {
     for (final template in _templates) {
-      await _api.updateAvailabilityTemplate(template);
+      await _api.updateAvailabilityTemplate(widget.serviceId, template);
     }
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Availability updated successfully')),
+        SnackBar(content: Text(context.tr('availability_updated_successfully'))),
       );
     }
   }
@@ -199,16 +201,16 @@ class _AvailabilityCard extends StatelessWidget {
               ? Colors.green.withOpacity(0.1)
               : Colors.red.withOpacity(0.1),
           child: Text(
-            template.dayLabel.substring(0, 2),
+            template.localizedShortDay(context),
             style: TextStyle(
               color: template.isAvailable ? Colors.green : Colors.red,
               fontWeight: FontWeight.bold,
             ),
           ),
         ),
-        title: Text(template.dayLabel),
+        title: Text(template.localizedDay(context)),
         subtitle: Text(
-          isUnavailable ? 'Unavailable' : template.timeLabel,
+          isUnavailable ? AppLocalizations.of(context).unavailable : template.timeLabel,
           style: TextStyle(
             color: isUnavailable ? Colors.red : null,
           ),

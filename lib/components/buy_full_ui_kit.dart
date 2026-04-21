@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:munasabati/l10n/app_localizations.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../constants.dart';
@@ -101,12 +102,12 @@ class _BuyFullKitState extends State<BuyFullKit> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        "Get the full template",
+                        context.tr('get_full_template'),
                         style: Theme.of(context).textTheme.titleLarge,
                       ),
                       const SizedBox(height: defaultPadding),
-                      const Text(
-                        "Thank you for using The Flutter Way shop template. You're currently using the free version. Please get the full kit to use this screen.",
+                      Text(
+                        context.tr('full_template_notice'),
                       ),
                       const SizedBox(height: defaultPadding),
                       Row(
@@ -130,8 +131,9 @@ class _BuyFullKitState extends State<BuyFullKit> {
                                 });
                               },
                               // child: Text("Get full kit"),
-                              label:
-                                  Text(_isCopied ? "Link Copyed" : "Copy link"),
+                              label: Text(_isCopied
+                                  ? context.tr('link_copied')
+                                  : context.tr('copy_link')),
                               icon: SvgPicture.asset(
                                 "assets/icons/world_map.svg",
                                 colorFilter: const ColorFilter.mode(
@@ -148,7 +150,7 @@ class _BuyFullKitState extends State<BuyFullKit> {
                                 buyLink();
                               },
                               // child: Text("Get full kit"),
-                              label: const Text("Get full code"),
+                              label: Text(context.tr('get_full_code')),
                               icon: SvgPicture.asset(
                                 "assets/icons/Bag.svg",
                                 colorFilter: const ColorFilter.mode(

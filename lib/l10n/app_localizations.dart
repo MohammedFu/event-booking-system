@@ -169,6 +169,19 @@ class AppLocalizations {
   String get fullName => translate('full_name');
   String get phoneNumberOptional => translate('phone_number');
 
+  String get rememberMe => translate('remember_me');
+  String get loginFailed => translate('login_failed');
+  String get registrationFailed => translate('registration_failed');
+  String get errorServerConnection => translate('error_server_connection');
+  String get errorWrongCredentials => translate('error_wrong_credentials');
+  String get errorNetwork => translate('error_network');
+  String get errorEmailExists => translate('error_email_exists');
+  String get errorValidation => translate('error_validation');
+
+  String get iAgreeWithThe => translate('i_agree_with_the');
+  String get termsOfService => translate('terms_of_service');
+  String get privacyPolicy => translate('privacy_policy');
+
   String get eventBookerAppName => translate('eventbooker_app_name');
   String get eventBookerTagline => translate('eventbooker_tagline');
   String get forgotPasswordQuestion => translate('forgot_password_question');
@@ -334,6 +347,23 @@ class AppLocalizations {
   String get onboardingDesc4 => translate('onboarding_desc_4');
   String get onboardingTitle5 => translate('onboarding_title_5');
   String get onboardingDesc5 => translate('onboarding_desc_5');
+
+  // Service Form
+  String get serviceTitle => translate('service_title');
+  String get basicInfo => translate('basic_info');
+  String get basePrice => translate('base_price');
+  String get pricingModel => translate('pricing_model');
+  String get images => translate('images');
+  String get gallery => translate('gallery');
+  String get camera => translate('camera');
+  String get tags => translate('tags');
+  String get addTag => translate('add_tag');
+  String get isAvailable => translate('is_available');
+  String get editService => translate('edit_service');
+  String get serviceUpdated => translate('service_updated');
+  String get serviceCreated => translate('service_created');
+  String get pleaseAddImage => translate('please_add_image');
+  String get maxCapacity => translate('max_capacity');
 }
 
 class _AppLocalizationsDelegate
@@ -354,4 +384,16 @@ class _AppLocalizationsDelegate
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
+}
+
+extension AppLocalizationsBuildContextX on BuildContext {
+  AppLocalizations get l10n => AppLocalizations.of(this);
+
+  String tr(String key, {Map<String, String>? params}) =>
+      l10n.translate(key, params: params);
+
+  String maybeTr(String value, {Map<String, String>? params}) {
+    final translated = l10n.translate(value, params: params);
+    return translated == value ? value : translated;
+  }
 }

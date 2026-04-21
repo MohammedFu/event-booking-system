@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:munasabati/constants.dart';
+import 'package:munasabati/l10n/app_localizations.dart';
 import 'package:munasabati/models/booking_models.dart';
 import 'package:munasabati/services/api_service_real.dart';
 
@@ -44,6 +45,7 @@ class _BookingReviewsScreenState extends State<BookingReviewsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.serviceTitle),
@@ -70,7 +72,7 @@ class _BookingReviewsScreenState extends State<BookingReviewsScreen> {
           padding: const EdgeInsets.all(defaultPadding),
           child: ElevatedButton(
             onPressed: () => _showWriteReviewDialog(context),
-            child: const Text('Write a Review'),
+            child: Text(l10n.writeAReview),
           ),
         ),
       ),
@@ -108,7 +110,8 @@ class _BookingReviewsScreenState extends State<BookingReviewsScreen> {
                         )),
               ),
               const SizedBox(height: 4),
-              Text('${_reviews.length} reviews',
+              Text(context.tr('reviews_count_compact',
+                      params: {'count': _reviews.length.toString()}),
                   style: Theme.of(context).textTheme.bodySmall),
             ],
           ),
@@ -163,7 +166,7 @@ class _BookingReviewsScreenState extends State<BookingReviewsScreen> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Write a Review'),
+          title: Text(AppLocalizations.of(context).writeAReview),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -184,8 +187,8 @@ class _BookingReviewsScreenState extends State<BookingReviewsScreen> {
               TextField(
                 controller: commentController,
                 maxLines: 3,
-                decoration: const InputDecoration(
-                  hintText: 'Share your experience...',
+                decoration: InputDecoration(
+                  hintText: AppLocalizations.of(context).shareYourExperience,
                   border: OutlineInputBorder(),
                 ),
               ),
@@ -194,7 +197,7 @@ class _BookingReviewsScreenState extends State<BookingReviewsScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
+              child: Text(AppLocalizations.of(context).cancel),
             ),
             ElevatedButton(
               onPressed: selectedRating == 0
@@ -216,7 +219,7 @@ class _BookingReviewsScreenState extends State<BookingReviewsScreen> {
                       }
                       if (context.mounted) Navigator.pop(context);
                     },
-              child: const Text('Submit'),
+              child: Text(AppLocalizations.of(context).submit),
             ),
           ],
         ),
@@ -256,7 +259,9 @@ class _ReviewCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        review.isAnonymous ? 'Anonymous' : review.consumerId,
+                        review.isAnonymous
+                            ? AppLocalizations.of(context).translate('anonymous')
+                            : review.consumerId,
                         style: Theme.of(context).textTheme.titleSmall,
                       ),
                       Text(

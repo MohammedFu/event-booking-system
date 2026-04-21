@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:munasabati/l10n/app_localizations.dart';
 
 import '../../../../constants.dart';
 
@@ -19,12 +20,12 @@ class InchesSizeTable extends StatelessWidget {
                     ? Colors.black12
                     : Colors.white10),
           ),
-          columns: const <DataColumn>[
-            DataColumn(label: Text('')),
-            DataColumn(label: Text('Size')),
-            DataColumn(label: Text('Bust')),
-            DataColumn(label: Text('Waist')),
-            DataColumn(label: Text('Hips')),
+          columns: <DataColumn>[
+            const DataColumn(label: Text('')),
+            DataColumn(label: Text(AppLocalizations.of(context).translate('size'))),
+            DataColumn(label: Text(AppLocalizations.of(context).translate('bust'))),
+            DataColumn(label: Text(AppLocalizations.of(context).translate('waist'))),
+            DataColumn(label: Text(AppLocalizations.of(context).translate('hips'))),
           ],
           rows: const <DataRow>[
             DataRow(

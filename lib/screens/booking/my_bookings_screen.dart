@@ -4,6 +4,7 @@ import 'package:munasabati/l10n/app_localizations.dart';
 import 'package:munasabati/l10n/model_localizations.dart';
 import 'package:munasabati/models/booking_models.dart';
 import 'package:munasabati/route/route_constants.dart';
+import 'package:munasabati/services/auth_provider.dart';
 import 'package:munasabati/services/booking_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -22,7 +23,14 @@ class _MyBookingsScreenState extends State<MyBookingsScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    context.read<BookingProvider>().fetchBookings();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      if (context.read<AuthProvider>().isAuthenticated) {
+        context.read<BookingProvider>().fetchBookings();
+      }
+    });
   }
 
   @override
@@ -34,6 +42,40 @@ class _MyBookingsScreenState extends State<MyBookingsScreen>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final auth = context.watch<AuthProvider>();
+
+    if (!auth.isAuthenticated) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(l10n.myBookings),
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(defaultPadding),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.receipt_long_outlined,
+                    size: 64, color: Theme.of(context).disabledColor),
+                const SizedBox(height: defaultPadding),
+                Text(
+                  'Sign in to view your booking history.',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: defaultPadding),
+                ElevatedButton(
+                  onPressed: () =>
+                      Navigator.pushNamed(context, authScreenRoute),
+                  child: Text(l10n.login),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.myBookings),
@@ -184,23 +226,37 @@ class _BookingCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 8),
-                Row(
+                Wrap(
+                  spacing: 16,
+                  runSpacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    const Icon(Icons.calendar_today,
-                        size: 16, color: Colors.grey),
-                    const SizedBox(width: 6),
-                    Text(
-                      '${booking.eventDate.day}/${booking.eventDate.month}/${booking.eventDate.year}',
-                      style: Theme.of(context).textTheme.bodySmall,
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.calendar_today,
+                            size: 16, color: Colors.grey),
+                        const SizedBox(width: 6),
+                        Text(
+                          '${booking.eventDate.day}/${booking.eventDate.month}/${booking.eventDate.year}',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 16),
-                    const Icon(Icons.category, size: 16, color: Colors.grey),
-                    const SizedBox(width: 6),
-                    Text(
-                      localizedEventType(context, booking.eventType),
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.category,
+                            size: 16, color: Colors.grey),
+                        const SizedBox(width: 6),
+                        Text(
+                          localizedEventType(context, booking.eventType),
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -246,8 +302,10 @@ class _BookingCard extends StatelessWidget {
                     ),
                   ),
                 const Divider(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 8,
+                  alignment: WrapAlignment.spaceBetween,
                   children: [
                     Text(
                       context.tr('services_booked_count', params: {

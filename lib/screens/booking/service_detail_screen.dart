@@ -1,9 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:munasabati/components/service_image.dart';
 import 'package:munasabati/constants.dart';
 import 'package:munasabati/l10n/app_localizations.dart';
 import 'package:munasabati/l10n/model_localizations.dart';
 import 'package:munasabati/models/booking_models.dart';
 import 'package:munasabati/route/route_constants.dart';
+import 'package:munasabati/services/app_analytics_service.dart';
+import 'package:munasabati/services/app_links_service.dart';
+import 'package:munasabati/services/auth_provider.dart';
 import 'package:munasabati/services/booking_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -19,6 +25,17 @@ class ServiceDetailScreen extends StatefulWidget {
 class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
   int _currentImageIndex = 0;
   final PageController _pageController = PageController();
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(
+      AppAnalyticsService.instance.logServiceViewed(
+        widget.service.id,
+        widget.service.serviceType.name,
+      ),
+    );
+  }
 
   @override
   void dispose() {
@@ -39,6 +56,16 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
             expandedHeight: 280,
             pinned: true,
             actions: [
+              IconButton(
+                icon: const Icon(Icons.share_outlined),
+                onPressed: () {
+                  AppLinksService.instance.shareService(
+                    context: context,
+                    serviceId: service.id,
+                    title: service.title,
+                  );
+                },
+              ),
               Consumer<BookingProvider>(
                 builder: (context, provider, _) {
                   final isBookmarked = provider.isBookmarked(service.id);
@@ -46,7 +73,43 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                     icon: Icon(
                       isBookmarked ? Icons.bookmark : Icons.bookmark_border,
                     ),
-                    onPressed: () => provider.toggleBookmark(service.id),
+                    onPressed: () async {
+                      final auth = context.read<AuthProvider>();
+                      if (!auth.isAuthenticated) {
+                        Navigator.pushNamed(context, authScreenRoute);
+                        return;
+                      }
+
+                      final success = await provider.toggleBookmark(
+                        service.id,
+                        service: service,
+                      );
+
+                      if (!context.mounted) {
+                        return;
+                      }
+
+                      if (success) {
+                        unawaited(
+                          AppAnalyticsService.instance.logBookmarkToggled(
+                            service.id,
+                            provider.isBookmarked(service.id),
+                          ),
+                        );
+                        return;
+                      }
+
+                      if (provider.error == null) {
+                        return;
+                      }
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(provider.error!),
+                          backgroundColor: errorColor,
+                        ),
+                      );
+                    },
                   );
                 },
               ),
@@ -59,14 +122,10 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                           setState(() => _currentImageIndex = index),
                       itemCount: service.images.length,
                       itemBuilder: (context, index) {
-                        return Image.network(
-                          service.images[index],
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => Container(
-                            color: primaryColor.withOpacity(0.1),
-                            child: Icon(service.serviceTypeIcon,
-                                size: 64, color: primaryColor),
-                          ),
+                        return ServiceImage(
+                          imageUrl: service.images[index],
+                          fallbackIcon: service.serviceTypeIcon,
+                          iconSize: 64,
                         );
                       },
                     )
@@ -106,7 +165,9 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
                     children: [
                       Container(
                         padding: const EdgeInsets.symmetric(
@@ -123,8 +184,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                               ?.copyWith(color: primaryColor),
                         ),
                       ),
-                      if (service.provider?.isVerified == true) ...[
-                        const SizedBox(width: 8),
+                      if (service.provider?.isVerified == true)
                         Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 10, vertical: 4),
@@ -148,7 +208,6 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                             ],
                           ),
                         ),
-                      ],
                     ],
                   ),
                   const SizedBox(height: 12),
@@ -160,38 +219,51 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                   ),
                   if (service.provider != null) ...[
                     const SizedBox(height: 8),
-                    Row(
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 8,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
-                        const Icon(Icons.star,
-                            size: 18, color: Color(0xFFFFBE21)),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${service.provider!.rating}',
-                          style:
-                              Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.star,
+                                size: 18, color: Color(0xFFFFBE21)),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${service.provider!.rating}',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium
+                                  ?.copyWith(
                                     fontWeight: FontWeight.w600,
                                   ),
-                        ),
-                        Text(
-                          ' (${context.tr('reviews_count_compact', params: {
-                                'count':
-                                    service.provider!.reviewCount.toString(),
-                              })})',
-                          style:
-                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                            ),
+                            Text(
+                              ' (${context.tr('reviews_count_compact', params: {
+                                    'count': service.provider!.reviewCount
+                                        .toString(),
+                                  })})',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodySmall
+                                  ?.copyWith(
                                     color: Theme.of(context)
                                         .textTheme
                                         .bodySmall
                                         ?.color
                                         ?.withOpacity(0.6),
                                   ),
+                            ),
+                          ],
                         ),
-                        const Spacer(),
                         if (service.provider!.city != null)
                           Row(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
                               const Icon(Icons.location_on,
                                   size: 16, color: Colors.grey),
+                              const SizedBox(width: 4),
                               Text(
                                 service.provider!.city!,
                                 style: Theme.of(context).textTheme.bodySmall,
@@ -245,68 +317,75 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
         borderRadius: BorderRadius.circular(defaultBorderRadious),
         border: Border.all(color: primaryColor.withOpacity(0.2)),
       ),
-      child: Row(
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                AppLocalizations.of(context).price,
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: primaryColor,
-                    ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                formatPrice(service.basePrice),
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      color: primaryColor,
-                      fontWeight: FontWeight.bold,
-                    ),
-              ),
-            ],
-          ),
-          const SizedBox(width: 16),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                service.pricingModel.label(context),
-                style: Theme.of(context).textTheme.labelSmall,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                service.maxDurationHours == null
-                    ? context.tr('min_duration_value', params: {
-                        'value': service.minDurationHours.toString(),
-                      })
-                    : context.tr('duration_range_value', params: {
-                        'min': service.minDurationHours.toString(),
-                        'max': service.maxDurationHours.toString(),
-                      }),
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ],
-          ),
-          const Spacer(),
-          if (service.maxCapacity != null)
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  AppLocalizations.of(context).capacity,
-                  style: Theme.of(context).textTheme.labelSmall,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final priceBlock = _pricingBlock(
+            context,
+            label: AppLocalizations.of(context).price,
+            value: formatPrice(service.basePrice),
+            labelColor: primaryColor,
+            valueStyle: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  color: primaryColor,
+                  fontWeight: FontWeight.bold,
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  '${service.maxCapacity} ${AppLocalizations.of(context).guests}',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+          );
+          final durationBlock = _pricingBlock(
+            context,
+            label: service.pricingModel.label(context),
+            value: service.maxDurationHours == null
+                ? context.tr('min_duration_value', params: {
+                    'value': service.minDurationHours.toString(),
+                  })
+                : context.tr('duration_range_value', params: {
+                    'min': service.minDurationHours.toString(),
+                    'max': service.maxDurationHours.toString(),
+                  }),
+          );
+          final capacityBlock = service.maxCapacity == null
+              ? null
+              : _pricingBlock(
+                  context,
+                  label: AppLocalizations.of(context).capacity,
+                  value:
+                      '${service.maxCapacity} ${AppLocalizations.of(context).guests}',
+                  crossAxisAlignment: constraints.maxWidth < 520
+                      ? CrossAxisAlignment.start
+                      : CrossAxisAlignment.end,
+                  textAlign: constraints.maxWidth < 520
+                      ? TextAlign.start
+                      : TextAlign.end,
+                  valueStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
-                ),
+                );
+
+          if (constraints.maxWidth < 520) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                priceBlock,
+                const SizedBox(height: 12),
+                durationBlock,
+                if (capacityBlock != null) ...[
+                  const SizedBox(height: 12),
+                  capacityBlock,
+                ],
               ],
-            ),
-        ],
+            );
+          }
+
+          return Row(
+            children: [
+              Expanded(child: priceBlock),
+              const SizedBox(width: 16),
+              Expanded(child: durationBlock),
+              if (capacityBlock != null) ...[
+                const SizedBox(width: 16),
+                Expanded(child: capacityBlock),
+              ],
+            ],
+          );
+        },
       ),
     );
   }
@@ -467,31 +546,46 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                   children: [
                     Text(
                       provider.businessName,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                             fontWeight: FontWeight.w600,
                           ),
                     ),
                     const SizedBox(height: 4),
-                    Row(
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 4,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
-                        const Icon(Icons.star,
-                            size: 14, color: Color(0xFFFFBE21)),
-                        Text(
-                          '${provider.rating} (${provider.reviewCount})',
-                          style: Theme.of(context).textTheme.bodySmall,
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.star,
+                                size: 14, color: Color(0xFFFFBE21)),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${provider.rating} (${provider.reviewCount})',
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ],
                         ),
-                        if (provider.isVerified) ...[
-                          const SizedBox(width: 8),
-                          const Icon(Icons.verified,
-                              size: 14, color: Color(0xFF2ED573)),
-                          Text(
-                            AppLocalizations.of(context).verified,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodySmall
-                                ?.copyWith(color: const Color(0xFF2ED573)),
+                        if (provider.isVerified)
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.verified,
+                                  size: 14, color: Color(0xFF2ED573)),
+                              const SizedBox(width: 4),
+                              Text(
+                                AppLocalizations.of(context).verified,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(color: const Color(0xFF2ED573)),
+                              ),
+                            ],
                           ),
-                        ],
                       ],
                     ),
                   ],
@@ -580,7 +674,8 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
         children: [
           Row(
             children: [
-              const Icon(Icons.shield_outlined, color: primaryColor, size: 20),
+              const Icon(Icons.shield_outlined,
+                  color: Color.fromARGB(255, 97, 255, 242), size: 20),
               const SizedBox(width: 8),
               Text(
                 AppLocalizations.of(context).cancellationPolicy,
@@ -646,9 +741,9 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
         ],
       ),
       child: SafeArea(
-        child: Row(
-          children: [
-            Column(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final priceInfo = Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -664,26 +759,73 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                   style: Theme.of(context).textTheme.labelSmall,
                 ),
               ],
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pushNamed(
-                    context,
-                    dateTimePickerScreenRoute,
-                    arguments: service,
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
-                child: Text(AppLocalizations.of(context).bookNow),
+            );
+
+            final button = ElevatedButton(
+              onPressed: () {
+                Navigator.pushNamed(
+                  context,
+                  dateTimePickerScreenRoute,
+                  arguments: service,
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
               ),
-            ),
-          ],
+              child: Text(AppLocalizations.of(context).bookNow),
+            );
+
+            if (constraints.maxWidth < 420) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  priceInfo,
+                  const SizedBox(height: 12),
+                  button,
+                ],
+              );
+            }
+
+            return Row(
+              children: [
+                priceInfo,
+                const SizedBox(width: 16),
+                Expanded(child: button),
+              ],
+            );
+          },
         ),
       ),
+    );
+  }
+
+  Widget _pricingBlock(
+    BuildContext context, {
+    required String label,
+    required String value,
+    Color? labelColor,
+    CrossAxisAlignment crossAxisAlignment = CrossAxisAlignment.start,
+    TextAlign textAlign = TextAlign.start,
+    TextStyle? valueStyle,
+  }) {
+    return Column(
+      crossAxisAlignment: crossAxisAlignment,
+      children: [
+        Text(
+          label,
+          textAlign: textAlign,
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: labelColor,
+              ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          textAlign: textAlign,
+          style: valueStyle ?? Theme.of(context).textTheme.bodySmall,
+        ),
+      ],
     );
   }
 }

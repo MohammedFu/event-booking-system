@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:munasabati/components/service_image.dart';
 import 'package:munasabati/constants.dart';
 import 'package:munasabati/l10n/app_localizations.dart';
 import 'package:munasabati/l10n/model_localizations.dart';
@@ -18,7 +19,10 @@ class BookingCartScreen extends StatelessWidget {
         actions: [
           Consumer<BookingProvider>(
             builder: (context, provider, _) {
-              if (provider.cartItems.isEmpty) return const SizedBox.shrink();
+              if (provider.cartItems.isEmpty) {
+                return const SizedBox.shrink();
+              }
+
               return TextButton(
                 onPressed: () {
                   _showClearCartDialog(context, provider);
@@ -36,8 +40,11 @@ class BookingCartScreen extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.shopping_bag_outlined,
-                      size: 80, color: Colors.grey.withOpacity(0.5)),
+                  Icon(
+                    Icons.shopping_bag_outlined,
+                    size: 80,
+                    color: Colors.grey.withOpacity(0.5),
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     AppLocalizations.of(context).yourCartEmpty,
@@ -111,71 +118,122 @@ class BookingCartScreen extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(AppLocalizations.of(context).subtotal,
-                    style: Theme.of(context).textTheme.bodyMedium),
-                Text('\$${provider.cartTotal.toInt()}',
-                    style: Theme.of(context).textTheme.bodyMedium),
+                Text(
+                  AppLocalizations.of(context).subtotal,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                Text(
+                  formatPrice(provider.cartTotal),
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
               ],
             ),
             const SizedBox(height: 4),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(AppLocalizations.of(context).depositPercent,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: const Color(0xFF2ED573),
-                        )),
-                Text('\$${deposit.toInt()}',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: const Color(0xFF2ED573),
-                        )),
+                Text(
+                  AppLocalizations.of(context).depositPercent,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: const Color(0xFF2ED573),
+                      ),
+                ),
+                Text(
+                  formatPrice(deposit),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: const Color(0xFF2ED573),
+                      ),
+                ),
               ],
             ),
             const Divider(height: 24),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(AppLocalizations.of(context).total,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        )),
-                Text('\$${provider.cartTotal.toInt()}',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: primaryColor,
-                          fontWeight: FontWeight.bold,
-                        )),
+                Text(
+                  AppLocalizations.of(context).total,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                Text(
+                  formatPrice(provider.cartTotal),
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: primaryColor,
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
               ],
             ),
             const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () {
-                      Navigator.pushNamed(context, bookingHomeScreenRoute);
-                    },
-                    icon: const Icon(Icons.add),
-                    label: Text(AppLocalizations.of(context).addMore),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final isCompact = constraints.maxWidth < 420;
+
+                if (isCompact) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      OutlinedButton.icon(
+                        onPressed: () {
+                          Navigator.pushNamed(context, bookingHomeScreenRoute);
+                        },
+                        icon: const Icon(Icons.add),
+                        label: Text(AppLocalizations.of(context).addMore),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.pushNamed(
+                            context,
+                            bookingConfirmationScreenRoute,
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        child: Text(AppLocalizations.of(context).proceedToBook),
+                      ),
+                    ],
+                  );
+                }
+
+                return Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          Navigator.pushNamed(context, bookingHomeScreenRoute);
+                        },
+                        icon: const Icon(Icons.add),
+                        label: Text(AppLocalizations.of(context).addMore),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  flex: 2,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.pushNamed(
-                          context, bookingConfirmationScreenRoute);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      flex: 2,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.pushNamed(
+                            context,
+                            bookingConfirmationScreenRoute,
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        child: Text(AppLocalizations.of(context).proceedToBook),
+                      ),
                     ),
-                    child: Text(AppLocalizations.of(context).proceedToBook),
-                  ),
-                ),
-              ],
+                  ],
+                );
+              },
             ),
           ],
         ),
@@ -199,8 +257,10 @@ class BookingCartScreen extends StatelessWidget {
               provider.clearCart();
               Navigator.pop(context);
             },
-            child: Text(AppLocalizations.of(context).clear,
-                style: const TextStyle(color: errorColor)),
+            child: Text(
+              AppLocalizations.of(context).clear,
+              style: const TextStyle(color: errorColor),
+            ),
           ),
         ],
       ),
@@ -217,6 +277,9 @@ class _CartItemCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final service = item.service;
+    final imageUrl = service.images.isNotEmpty ? service.images.first : null;
+    final dateLabel =
+        '${item.date.day}/${item.date.month}/${item.date.year}  ${item.timeLabel}';
 
     return Dismissible(
       key: Key(service.id),
@@ -242,94 +305,172 @@ class _CartItemCard extends StatelessWidget {
             ),
           ],
         ),
-        child: Row(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: SizedBox(
-                width: 70,
-                height: 70,
-                child: service.images.isNotEmpty
-                    ? Image.network(service.images.first,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Container(
-                              color: primaryColor.withOpacity(0.1),
-                              child: Icon(service.serviceTypeIcon,
-                                  color: primaryColor, size: 24),
-                            ))
-                    : Container(
-                        color: primaryColor.withOpacity(0.1),
-                        child: Icon(service.serviceTypeIcon,
-                            color: primaryColor, size: 24),
-                      ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isCompact = constraints.maxWidth < 360;
+
+            if (isCompact) {
+              return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    service.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                  ),
-                  const SizedBox(height: 4),
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(service.serviceTypeIcon,
-                          size: 14, color: primaryColor),
-                      const SizedBox(width: 4),
-                      Text(
-                        service.serviceType.label(context),
-                        style: Theme.of(context).textTheme.labelSmall,
+                      SizedBox(
+                        width: 70,
+                        height: 70,
+                        child: ServiceImage(
+                          imageUrl: imageUrl,
+                          fallbackIcon: service.serviceTypeIcon,
+                          borderRadius: BorderRadius.circular(8),
+                          iconSize: 24,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              service.title,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              service.serviceType.label(context),
+                              style: Theme.of(context).textTheme.labelSmall,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              dateLabel,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context).textTheme.labelSmall,
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: onRemove,
+                        icon: const Icon(Icons.close, size: 18),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 12),
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Icon(Icons.access_time,
-                          size: 14, color: Colors.grey),
-                      const SizedBox(width: 4),
                       Text(
-                        '${item.date.day}/${item.date.month}/${item.date.year}  ${item.timeLabel}',
+                        context.tr('duration_hours_value', params: {
+                          'value': item.durationHours.toString(),
+                        }),
                         style: Theme.of(context).textTheme.labelSmall,
+                      ),
+                      Text(
+                        formatPrice(item.subtotal),
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                              color: primaryColor,
+                              fontWeight: FontWeight.bold,
+                            ),
                       ),
                     ],
                   ),
                 ],
-              ),
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
+              );
+            }
+
+            return Row(
               children: [
-                Text(
-                  '\$${item.subtotal.toInt()}',
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        color: primaryColor,
-                        fontWeight: FontWeight.bold,
+                SizedBox(
+                  width: 70,
+                  height: 70,
+                  child: ServiceImage(
+                    imageUrl: imageUrl,
+                    fallbackIcon: service.serviceTypeIcon,
+                    borderRadius: BorderRadius.circular(8),
+                    iconSize: 24,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        service.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
                       ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(
+                            service.serviceTypeIcon,
+                            size: 14,
+                            color: primaryColor,
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              service.serviceType.label(context),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context).textTheme.labelSmall,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        dateLabel,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.labelSmall,
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  context.tr('duration_hours_value', params: {
-                    'value': item.durationHours.toString(),
-                  }),
-                  style: Theme.of(context).textTheme.labelSmall,
-                ),
-                IconButton(
-                  onPressed: onRemove,
-                  icon: const Icon(Icons.close, size: 18),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
+                const SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      formatPrice(item.subtotal),
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            color: primaryColor,
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      context.tr('duration_hours_value', params: {
+                        'value': item.durationHours.toString(),
+                      }),
+                      style: Theme.of(context).textTheme.labelSmall,
+                    ),
+                    IconButton(
+                      onPressed: onRemove,
+                      icon: const Icon(Icons.close, size: 18),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                  ],
                 ),
               ],
-            ),
-          ],
+            );
+          },
         ),
       ),
     );

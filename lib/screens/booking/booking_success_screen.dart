@@ -1,14 +1,39 @@
 import 'package:flutter/material.dart';
 import 'package:munasabati/constants.dart';
 import 'package:munasabati/l10n/app_localizations.dart';
+import 'package:munasabati/l10n/model_localizations.dart';
+import 'package:munasabati/models/booking_models.dart';
 import 'package:munasabati/route/route_constants.dart';
 
 class BookingSuccessScreen extends StatelessWidget {
-  const BookingSuccessScreen({super.key});
+  final BookingModel? booking;
+
+  const BookingSuccessScreen({
+    super.key,
+    this.booking,
+  });
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final bookingStatus = booking?.status ?? BookingStatus.pending;
+    final statusLabel = bookingStatus.label(context);
+    final title = bookingStatus == BookingStatus.pending
+        ? context.tr('booking_request_sent_title')
+        : context.tr('booking_confirmed_exclamation');
+    final message = bookingStatus == BookingStatus.pending
+        ? context.tr('booking_request_sent_message')
+        : context.tr('booking_success_message_full');
+    final bookingReference = booking != null
+        ? '#${booking!.id.split('-').first.toUpperCase()}'
+        : '#BK-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}';
+    final depositLabel = booking?.depositPaid == true
+        ? context.tr('deposit_paid')
+        : l10n.depositDueNow;
+    final depositValue = booking != null
+        ? formatPrice(booking!.depositAmount)
+        : context.tr('deposit_confirmed_percent');
+
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -31,14 +56,14 @@ class BookingSuccessScreen extends StatelessWidget {
               ),
               const SizedBox(height: 32),
               Text(
-                context.tr('booking_confirmed_exclamation'),
+                title,
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
               ),
               const SizedBox(height: 16),
               Text(
-                context.tr('booking_success_message_full'),
+                message,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       height: 1.5,
@@ -65,10 +90,11 @@ class BookingSuccessScreen extends StatelessWidget {
                         Text(context.tr('booking_id'),
                             style: Theme.of(context).textTheme.bodySmall),
                         Text(
-                          '#BK-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
+                          bookingReference,
+                          style:
+                              Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
                         ),
                       ],
                     ),
@@ -86,7 +112,7 @@ class BookingSuccessScreen extends StatelessWidget {
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
-                            context.tr('pending_confirmation'),
+                            statusLabel,
                             style: TextStyle(
                               color: Color(0xFFFFBE21),
                               fontSize: 12,
@@ -100,14 +126,15 @@ class BookingSuccessScreen extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(context.tr('deposit_paid'),
+                        Text(depositLabel,
                             style: Theme.of(context).textTheme.bodySmall),
                         Text(
-                          context.tr('deposit_confirmed_percent'),
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: const Color(0xFF2ED573),
-                                fontWeight: FontWeight.w600,
-                              ),
+                          depositValue,
+                          style:
+                              Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: const Color(0xFF2ED573),
+                                    fontWeight: FontWeight.w600,
+                                  ),
                         ),
                       ],
                     ),

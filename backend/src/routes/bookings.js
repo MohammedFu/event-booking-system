@@ -1,6 +1,10 @@
 const zod = require('zod');
 const prisma = require('../lib/prisma');
 const redis = require('../lib/redis');
+const {
+  createNotification,
+  createNotifications,
+} = require('../lib/notifications');
 
 // Validation schemas
 const createBookingSchema = zod.object({
@@ -58,16 +62,23 @@ async function routes(fastify, options) {
                 service: {
                   select: {
                     id: true,
+                    providerId: true,
                     title: true,
                     images: true,
                     serviceType: true,
-                  },
-                },
-                provider: {
-                  select: {
-                    id: true,
-                    businessName: true,
-                    logoUrl: true,
+                    provider: {
+                      select: {
+                        id: true,
+                        userId: true,
+                        businessName: true,
+                        logoUrl: true,
+                        serviceType: true,
+                        rating: true,
+                        reviewCount: true,
+                        city: true,
+                        isVerified: true,
+                      },
+                    },
                   },
                 },
               },
@@ -269,16 +280,23 @@ async function routes(fastify, options) {
                 service: {
                   select: {
                     id: true,
+                    providerId: true,
                     title: true,
                     images: true,
                     serviceType: true,
-                  },
-                },
-                provider: {
-                  select: {
-                    id: true,
-                    businessName: true,
-                    logoUrl: true,
+                    provider: {
+                      select: {
+                        id: true,
+                        userId: true,
+                        businessName: true,
+                        logoUrl: true,
+                        serviceType: true,
+                        rating: true,
+                        reviewCount: true,
+                        city: true,
+                        isVerified: true,
+                      },
+                    },
                   },
                 },
               },
@@ -286,16 +304,47 @@ async function routes(fastify, options) {
           },
         });
 
-        return booking;
+        const providerNotifications = validated.items.map((item) => {
+          const service = services.find((candidate) => candidate.id === item.serviceId);
+          return {
+            userId: service?.provider?.userId,
+            type: 'PROVIDER_MESSAGE',
+            title: 'New booking request',
+            body: `A new booking request was submitted for ${service?.title || 'your service'}.`,
+            data: {
+              bookingId: booking.id,
+              serviceId: item.serviceId,
+              serviceTitle: service?.title,
+              audience: 'provider',
+            },
+          };
+        });
+
+        return { booking, providerNotifications };
       }, {
         maxWait: 5000,
         timeout: 10000,
       });
 
+      await Promise.all([
+        createNotification({
+          userId,
+          type: 'SYSTEM',
+          title: 'Booking request sent',
+          body: `Your booking request for ${result.booking.eventName || 'your event'} has been submitted.`,
+          data: {
+            bookingId: result.booking.id,
+            eventName: result.booking.eventName,
+            audience: 'consumer',
+          },
+        }),
+        createNotifications(result.providerNotifications),
+      ]);
+
       reply.code(201);
       return {
         success: true,
-        data: result,
+        data: result.booking,
       };
     },
   });
@@ -325,18 +374,25 @@ async function routes(fastify, options) {
               service: {
                 select: {
                   id: true,
+                  providerId: true,
                   title: true,
                   images: true,
                   serviceType: true,
-                },
-              },
-              provider: {
-                select: {
-                  id: true,
-                  businessName: true,
-                  logoUrl: true,
-                  contactPhone: true,
-                  contactEmail: true,
+                  provider: {
+                    select: {
+                      id: true,
+                      userId: true,
+                      businessName: true,
+                      logoUrl: true,
+                      serviceType: true,
+                      rating: true,
+                      reviewCount: true,
+                      city: true,
+                      isVerified: true,
+                      contactPhone: true,
+                      contactEmail: true,
+                    },
+                  },
                 },
               },
             },
@@ -443,7 +499,17 @@ async function routes(fastify, options) {
 
       const booking = await prisma.booking.findFirst({
         where: { id, consumerId: userId },
-        include: { items: true },
+        include: {
+          items: {
+            include: {
+              service: {
+                select: {
+                  title: true,
+                },
+              },
+            },
+          },
+        },
       });
 
       if (!booking) {
@@ -486,8 +552,48 @@ async function routes(fastify, options) {
         });
       });
 
-      // TODO: Process refund if payment was made
-      // TODO: Send notification to provider
+      const providerIds = [...new Set(booking.items.map((item) => item.providerId))];
+      const providers = await prisma.provider.findMany({
+        where: {
+          id: { in: providerIds },
+        },
+        select: {
+          id: true,
+          userId: true,
+        },
+      });
+
+      const providerUserIds = new Map(
+        providers.map((provider) => [provider.id, provider.userId]),
+      );
+
+      await Promise.all([
+        createNotification({
+          userId,
+          type: 'BOOKING_CANCELLED',
+          title: 'Booking cancelled',
+          body: `${booking.eventName || 'Your booking'} was cancelled successfully.`,
+          data: {
+            bookingId: id,
+            eventName: booking.eventName,
+            audience: 'consumer',
+          },
+        }),
+        createNotifications(
+          booking.items.map((item) => ({
+            userId: providerUserIds.get(item.providerId),
+            type: 'BOOKING_CANCELLED',
+            title: 'Booking cancelled',
+            body: `A customer cancelled ${item.service?.title || 'a booking'}.`,
+            data: {
+              bookingId: id,
+              serviceId: item.serviceId,
+              serviceTitle: item.service?.title,
+              audience: 'provider',
+            },
+          })),
+        ),
+      ]);
 
       return {
         success: true,
@@ -580,7 +686,17 @@ async function routes(fastify, options) {
         return updatedBooking;
       });
 
-      // TODO: Send notifications to consumer
+      await createNotification({
+        userId: booking.consumerId,
+        type: 'BOOKING_CONFIRMED',
+        title: 'Booking confirmed',
+        body: `${booking.eventName || 'Your booking'} has been confirmed.`,
+        data: {
+          bookingId: id,
+          eventName: booking.eventName,
+          audience: 'consumer',
+        },
+      });
 
       return {
         success: true,

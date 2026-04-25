@@ -1,5 +1,6 @@
 const zod = require('zod');
 const prisma = require('../lib/prisma');
+const { normalizeServiceMedia } = require('../lib/public-url');
 
 // Validation schemas
 const updateProfileSchema = zod.object({
@@ -13,11 +14,22 @@ const updatePreferencesSchema = zod.object({
   preferredCarTypes: zod.array(zod.string()).optional(),
   preferredPhotographerStyles: zod.array(zod.string()).optional(),
   preferredEntertainerTypes: zod.array(zod.string()).optional(),
-  budgetRange: zod.object({
-    min: zod.number(),
-    max: zod.number(),
-  }).optional(),
+  budgetRange: zod
+    .object({
+      min: zod.number(),
+      max: zod.number().nullable(),
+    })
+    .optional(),
   preferredCities: zod.array(zod.string()).optional(),
+});
+
+const registerDeviceTokenSchema = zod.object({
+  token: zod.string().min(10),
+  platform: zod.enum(["ANDROID", "IOS", "WEB"]),
+});
+
+const unregisterDeviceTokenSchema = zod.object({
+  token: zod.string().min(10),
 });
 
 async function routes(fastify, options) {
@@ -192,7 +204,9 @@ async function routes(fastify, options) {
         orderBy: { createdAt: 'desc' },
       });
 
-      const services = bookmarks.map((b) => b.service);
+      const services = bookmarks.map((b) =>
+        normalizeServiceMedia(b.service, request)
+      );
 
       return {
         success: true,
@@ -405,6 +419,93 @@ async function routes(fastify, options) {
       return {
         success: true,
         message: 'All notifications marked as read',
+      };
+    },
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // POST /device-tokens (Register or refresh a mobile device token)
+  // ═══════════════════════════════════════════════════════════════════════════
+  fastify.post('/device-tokens', {
+    onRequest: [fastify.authenticate],
+    schema: {
+      description: 'Register a device token for push notifications',
+      tags: ['Users'],
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: 'object',
+        required: ['token', 'platform'],
+        properties: {
+          token: { type: 'string' },
+          platform: {
+            type: 'string',
+            enum: ['ANDROID', 'IOS', 'WEB'],
+          },
+        },
+      },
+    },
+    handler: async (request, reply) => {
+      const userId = request.user.userId;
+      const validated = registerDeviceTokenSchema.parse(request.body);
+
+      const deviceToken = await prisma.deviceToken.upsert({
+        where: { token: validated.token },
+        create: {
+          userId,
+          token: validated.token,
+          platform: validated.platform,
+          isActive: true,
+        },
+        update: {
+          userId,
+          platform: validated.platform,
+          isActive: true,
+          lastUsedAt: new Date(),
+        },
+      });
+
+      return {
+        success: true,
+        data: deviceToken,
+      };
+    },
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // DELETE /device-tokens (Unregister current device token)
+  // ═══════════════════════════════════════════════════════════════════════════
+  fastify.delete('/device-tokens', {
+    onRequest: [fastify.authenticate],
+    schema: {
+      description: 'Unregister a device token',
+      tags: ['Users'],
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: 'object',
+        required: ['token'],
+        properties: {
+          token: { type: 'string' },
+        },
+      },
+    },
+    handler: async (request, reply) => {
+      const userId = request.user.userId;
+      const validated = unregisterDeviceTokenSchema.parse(request.body);
+
+      await prisma.deviceToken.updateMany({
+        where: {
+          userId,
+          token: validated.token,
+        },
+        data: {
+          isActive: false,
+          lastUsedAt: new Date(),
+        },
+      });
+
+      return {
+        success: true,
+        message: 'Device token removed successfully',
       };
     },
   });

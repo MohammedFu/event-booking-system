@@ -2,6 +2,8 @@ const zod = require("zod");
 const prisma = require("../lib/prisma");
 const fs = require("fs");
 const path = require("path");
+const { createNotification } = require("../lib/notifications");
+const { getRequestBaseUrl } = require("../lib/public-url");
 
 // Validation schemas
 const updateAvailabilitySchema = zod.object({
@@ -320,7 +322,14 @@ async function routes(fastify, options) {
           id,
           providerId: provider.id,
         },
-        include: { booking: true },
+        include: {
+          booking: true,
+          service: {
+            select: {
+              title: true,
+            },
+          },
+        },
       });
 
       if (!bookingItem) {
@@ -372,6 +381,26 @@ async function routes(fastify, options) {
         await prisma.booking.update({
           where: { id: bookingItem.bookingId },
           data: { status: "CANCELLED" },
+        });
+      }
+
+      if (status === "CONFIRMED" || status === "CANCELLED") {
+        await createNotification({
+          userId: bookingItem.booking.consumerId,
+          type: status === "CONFIRMED" ? "BOOKING_CONFIRMED" : "BOOKING_CANCELLED",
+          title: status === "CONFIRMED" ? "Booking confirmed" : "Booking cancelled",
+          body:
+            status === "CONFIRMED"
+              ? `${bookingItem.service?.title || "Your booking"} was confirmed by the provider.`
+              : `${bookingItem.service?.title || "Your booking"} was declined by the provider.`,
+          data: {
+            bookingId: bookingItem.bookingId,
+            bookingItemId: bookingItem.id,
+            serviceId: bookingItem.serviceId,
+            serviceTitle: bookingItem.service?.title,
+            status,
+            audience: 'consumer',
+          },
         });
       }
 
@@ -1047,8 +1076,7 @@ async function routes(fastify, options) {
           await part.file.pipe(fs.createWriteStream(filepath));
 
           // Generate URL (assuming server serves /uploads statically)
-          const baseUrl =
-            process.env.BASE_URL || `${request.protocol}://${request.hostname}`;
+          const baseUrl = getRequestBaseUrl(request);
           const fileUrl = `${baseUrl}/uploads/${filename}`;
           uploadedUrls.push(fileUrl);
         }
@@ -1132,8 +1160,7 @@ async function routes(fastify, options) {
 
           await part.file.pipe(fs.createWriteStream(filepath));
 
-          const baseUrl =
-            process.env.BASE_URL || `${request.protocol}://${request.hostname}`;
+          const baseUrl = getRequestBaseUrl(request);
           const fileUrl = `${baseUrl}/uploads/${filename}`;
           newUrls.push(fileUrl);
         }

@@ -107,7 +107,12 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
         title: Text(context.tr('provider_dashboard')),
         actions: [
           IconButton(
-            onPressed: () {},
+            onPressed: () {
+              Navigator.pushNamed(
+                context,
+                bookingNotificationsScreenRoute,
+              );
+            },
             icon: const Icon(Icons.notifications_outlined),
           ),
         ],
@@ -226,11 +231,11 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: MediaQuery.sizeOf(context).width >= 900 ? 4 : 2,
         mainAxisSpacing: 12,
         crossAxisSpacing: 12,
-        childAspectRatio: 1.4,
+        childAspectRatio: MediaQuery.sizeOf(context).width < 360 ? 1.1 : 1.4,
       ),
       itemCount: cards.length,
       itemBuilder: (context, index) {
@@ -315,35 +320,49 @@ class _ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
       ),
     ];
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: actions.map((action) {
-        return GestureDetector(
-          onTap: action.onTap,
-          child: SizedBox(
-            width: 72,
-            child: Column(
-              children: [
-                Container(
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    color: action.color.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(defaultBorderRadious),
-                  ),
-                  child: Icon(action.icon, color: action.color, size: 24),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final itemWidth = constraints.maxWidth < 420
+            ? (constraints.maxWidth - 12) / 2
+            : constraints.maxWidth >= 900
+                ? (constraints.maxWidth - 36) / 4
+                : (constraints.maxWidth - 24) / 3;
+
+        return Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: actions.map((action) {
+            return GestureDetector(
+              onTap: action.onTap,
+              child: SizedBox(
+                width: itemWidth,
+                child: Column(
+                  children: [
+                    Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: action.color.withOpacity(0.1),
+                        borderRadius:
+                            BorderRadius.circular(defaultBorderRadious),
+                      ),
+                      child: Icon(action.icon, color: action.color, size: 24),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      action.label,
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.labelSmall,
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  action.label,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.labelSmall,
-                ),
-              ],
-            ),
-          ),
+              ),
+            );
+          }).toList(),
         );
-      }).toList(),
+      },
     );
   }
 }
@@ -456,49 +475,90 @@ class _BookingRequestCard extends StatelessWidget {
             ),
           ],
           const SizedBox(height: 8),
-          Row(
+          Wrap(
+            spacing: 16,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              const Icon(Icons.calendar_today, size: 14, color: Colors.grey),
-              const SizedBox(width: 4),
-              Text(
-                '${booking.eventDate.day}/${booking.eventDate.month}/${booking.eventDate.year}',
-                style: Theme.of(context).textTheme.bodySmall,
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.calendar_today,
+                      size: 14, color: Colors.grey),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${booking.eventDate.day}/${booking.eventDate.month}/${booking.eventDate.year}',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
               ),
-              const SizedBox(width: 16),
-              const Icon(Icons.attach_money, size: 14, color: Colors.grey),
-              const SizedBox(width: 4),
-              Text(
-                formatPrice(booking.totalAmount),
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.attach_money, size: 14, color: Colors.grey),
+                  const SizedBox(width: 4),
+                  Text(
+                    formatPrice(booking.totalAmount),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                ],
               ),
             ],
           ),
           const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: onReject,
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: errorColor,
-                    padding: const EdgeInsets.symmetric(vertical: 8),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              if (constraints.maxWidth < 360) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    OutlinedButton(
+                      onPressed: onReject,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: errorColor,
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                      ),
+                      child: Text(context.tr('reject')),
+                    ),
+                    const SizedBox(height: 12),
+                    ElevatedButton(
+                      onPressed: onAccept,
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                      ),
+                      child: Text(context.tr('accept')),
+                    ),
+                  ],
+                );
+              }
+
+              return Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: onReject,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: errorColor,
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                      ),
+                      child: Text(context.tr('reject')),
+                    ),
                   ),
-                  child: Text(context.tr('reject')),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: onAccept,
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: onAccept,
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                      ),
+                      child: Text(context.tr('accept')),
+                    ),
                   ),
-                  child: Text(context.tr('accept')),
-                ),
-              ),
-            ],
+                ],
+              );
+            },
           ),
         ],
       ),

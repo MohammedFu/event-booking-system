@@ -50,6 +50,34 @@
 	<string>http</string>
 	<string>https</string>
 	</array>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>com.event.booking</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>munasabati</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>flutterstripe</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>flutterstripe</string>
+			</array>
+		</dict>
+	</array>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+		<string>remote-notification</string>
+	</array>
 
 </dict>
 </plist>

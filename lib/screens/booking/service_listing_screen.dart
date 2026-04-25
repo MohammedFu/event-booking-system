@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:munasabati/components/service_image.dart';
 import 'package:munasabati/constants.dart';
 import 'package:munasabati/l10n/app_localizations.dart';
 import 'package:munasabati/l10n/model_localizations.dart';
@@ -25,7 +26,11 @@ class _ServiceListingScreenState extends State<ServiceListingScreen> {
   void initState() {
     super.initState();
     _selectedType = widget.serviceType;
-    _fetchServices();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _fetchServices();
+      }
+    });
   }
 
   Future<void> _fetchServices() async {
@@ -46,6 +51,7 @@ class _ServiceListingScreenState extends State<ServiceListingScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+
     return Scaffold(
       appBar: AppBar(
         title: Text(_getTypeLabel(_selectedType) ?? l10n.allServices),
@@ -65,11 +71,16 @@ class _ServiceListingScreenState extends State<ServiceListingScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.error_outline,
-                            size: 64, color: Colors.red),
+                        const Icon(
+                          Icons.error_outline,
+                          size: 64,
+                          color: Colors.red,
+                        ),
                         const SizedBox(height: 16),
-                        Text(context.maybeTr(provider.error!),
-                            style: Theme.of(context).textTheme.titleMedium),
+                        Text(
+                          context.maybeTr(provider.error!),
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
                         const SizedBox(height: 16),
                         ElevatedButton(
                           onPressed: _fetchServices,
@@ -81,17 +92,21 @@ class _ServiceListingScreenState extends State<ServiceListingScreen> {
                 }
 
                 final services = provider.services;
-
                 if (services.isEmpty) {
                   return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.search_off,
-                            size: 64, color: Colors.grey),
+                        const Icon(
+                          Icons.search_off,
+                          size: 64,
+                          color: Colors.grey,
+                        ),
                         const SizedBox(height: 16),
-                        Text(l10n.noServicesFound,
-                            style: Theme.of(context).textTheme.titleMedium),
+                        Text(
+                          l10n.noServicesFound,
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
                       ],
                     ),
                   );
@@ -123,6 +138,7 @@ class _ServiceListingScreenState extends State<ServiceListingScreen> {
 
   Widget _buildFilterBar(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+
     return Container(
       padding: const EdgeInsets.all(defaultPadding),
       child: Column(
@@ -201,21 +217,31 @@ class _ServiceListingScreenState extends State<ServiceListingScreen> {
                 DropdownButton<String>(
                   value: _sortBy,
                   underline: const SizedBox(),
+                  isDense: true,
                   items: [
                     DropdownMenuItem(
-                        value: 'rating', child: Text(l10n.topRated)),
+                      value: 'rating',
+                      child: Text(l10n.topRated),
+                    ),
                     DropdownMenuItem(
-                        value: 'price_low', child: Text(l10n.priceLow)),
+                      value: 'price_low',
+                      child: Text(l10n.priceLow),
+                    ),
                     DropdownMenuItem(
-                        value: 'price_high', child: Text(l10n.priceHigh)),
+                      value: 'price_high',
+                      child: Text(l10n.priceHigh),
+                    ),
                     DropdownMenuItem(
-                        value: 'reviews', child: Text(l10n.mostReviewed)),
+                      value: 'reviews',
+                      child: Text(l10n.mostReviewed),
+                    ),
                   ],
-                  onChanged: (val) async {
-                    if (val != null) {
-                      setState(() => _sortBy = val);
-                      await _fetchServices();
+                  onChanged: (value) async {
+                    if (value == null) {
+                      return;
                     }
+                    setState(() => _sortBy = value);
+                    await _fetchServices();
                   },
                 ),
               ],
@@ -277,135 +303,263 @@ class _ServiceListCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final imageUrl = service.images.isNotEmpty ? service.images.first : null;
+    final typeBadge = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: primaryColor.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        service.serviceType.label(context),
+        style: Theme.of(context)
+            .textTheme
+            .labelSmall
+            ?.copyWith(color: primaryColor),
+      ),
+    );
+
     return Padding(
       padding: const EdgeInsets.only(bottom: defaultPadding),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(defaultBorderRadious),
-        child: Container(
-          decoration: BoxDecoration(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isCompact = constraints.maxWidth < 420;
+
+          return InkWell(
+            onTap: onTap,
             borderRadius: BorderRadius.circular(defaultBorderRadious),
-            color: Theme.of(context).cardColor,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 5),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(defaultBorderRadious),
+                color: Theme.of(context).cardColor,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
               ),
-            ],
-          ),
-          child: Row(
-            children: [
-              ClipRRect(
-                borderRadius: const BorderRadius.horizontal(
-                    left: Radius.circular(defaultBorderRadious)),
-                child: SizedBox(
-                  width: 120,
-                  height: 120,
-                  child: service.images.isNotEmpty
-                      ? Image.network(
-                          service.images.first,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => Container(
-                            color: primaryColor.withOpacity(0.1),
-                            child: Icon(service.serviceTypeIcon,
-                                color: primaryColor, size: 32),
+              child: isCompact
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(
+                          height: 180,
+                          width: double.infinity,
+                          child: ServiceImage(
+                            imageUrl: imageUrl,
+                            fallbackIcon: service.serviceTypeIcon,
+                            borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(defaultBorderRadious),
+                            ),
                           ),
-                        )
-                      : Container(
-                          color: primaryColor.withOpacity(0.1),
-                          child: Icon(service.serviceTypeIcon,
-                              color: primaryColor, size: 32),
                         ),
-                ),
-              ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: primaryColor.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              service.serviceType.label(context),
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .labelSmall
-                                  ?.copyWith(color: primaryColor),
-                            ),
-                          ),
-                          if (service.provider?.isVerified == true) ...[
-                            const SizedBox(width: 6),
-                            const Icon(Icons.verified,
-                                size: 14, color: primaryColor),
-                          ],
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        service.title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                      ),
-                      if (service.provider != null) ...[
-                        const SizedBox(height: 2),
-                        Text(
-                          service.provider!.businessName,
-                          style:
-                              Theme.of(context).textTheme.labelSmall?.copyWith(
-                                    color: Theme.of(context)
-                                        .textTheme
-                                        .labelSmall
-                                        ?.color
-                                        ?.withOpacity(0.6),
+                        Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Wrap(
+                                spacing: 6,
+                                runSpacing: 6,
+                                children: [
+                                  typeBadge,
+                                  if (service.provider?.isVerified == true)
+                                    const Icon(
+                                      Icons.verified,
+                                      size: 14,
+                                      color: primaryColor,
+                                    ),
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                service.title,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                              ),
+                              if (service.provider != null) ...[
+                                const SizedBox(height: 2),
+                                Text(
+                                  service.provider!.businessName,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .labelSmall
+                                      ?.copyWith(
+                                        color: Theme.of(context)
+                                            .textTheme
+                                            .labelSmall
+                                            ?.color
+                                            ?.withOpacity(0.6),
+                                      ),
+                                ),
+                              ],
+                              const SizedBox(height: 8),
+                              Wrap(
+                                spacing: 12,
+                                runSpacing: 6,
+                                children: [
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(
+                                        Icons.star,
+                                        size: 14,
+                                        color: Color(0xFFFFBE21),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        '${service.provider?.rating ?? 0} (${service.provider?.reviewCount ?? 0})',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .labelSmall,
+                                      ),
+                                    ],
                                   ),
+                                  Text(
+                                    formatPrice(service.basePrice),
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleSmall
+                                        ?.copyWith(
+                                          color: primaryColor,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                  ),
+                                  if (service.pricingModel ==
+                                      PricingModel.hourly)
+                                    Text(
+                                      l10n.perHour,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .labelSmall,
+                                    ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
                       ],
-                      const SizedBox(height: 6),
-                      Row(
-                        children: [
-                          const Icon(Icons.star,
-                              size: 14, color: Color(0xFFFFBE21)),
-                          Text(
-                            '${service.provider?.rating ?? 0} (${service.provider?.reviewCount ?? 0})',
-                            style: Theme.of(context).textTheme.labelSmall,
-                          ),
-                          const Spacer(),
-                          Text(
-                            formatPrice(service.basePrice),
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleSmall
-                                ?.copyWith(
-                                  color: primaryColor,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                          ),
-                          if (service.pricingModel == PricingModel.hourly)
-                            Text(
-                              l10n.perHour,
-                              style: Theme.of(context).textTheme.labelSmall,
+                    )
+                  : Row(
+                      children: [
+                        SizedBox(
+                          width: 120,
+                          height: 120,
+                          child: ServiceImage(
+                            imageUrl: imageUrl,
+                            fallbackIcon: service.serviceTypeIcon,
+                            borderRadius: const BorderRadius.horizontal(
+                              left: Radius.circular(defaultBorderRadious),
                             ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
+                          ),
+                        ),
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Wrap(
+                                  spacing: 6,
+                                  runSpacing: 6,
+                                  children: [
+                                    typeBadge,
+                                    if (service.provider?.isVerified == true)
+                                      const Icon(
+                                        Icons.verified,
+                                        size: 14,
+                                        color: primaryColor,
+                                      ),
+                                  ],
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  service.title,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                ),
+                                if (service.provider != null) ...[
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    service.provider!.businessName,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .labelSmall
+                                        ?.copyWith(
+                                          color: Theme.of(context)
+                                              .textTheme
+                                              .labelSmall
+                                              ?.color
+                                              ?.withOpacity(0.6),
+                                        ),
+                                  ),
+                                ],
+                                const SizedBox(height: 6),
+                                Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.star,
+                                      size: 14,
+                                      color: Color(0xFFFFBE21),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Expanded(
+                                      child: Text(
+                                        '${service.provider?.rating ?? 0} (${service.provider?.reviewCount ?? 0})',
+                                        overflow: TextOverflow.ellipsis,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .labelSmall,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      formatPrice(service.basePrice),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleSmall
+                                          ?.copyWith(
+                                            color: primaryColor,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                    ),
+                                    if (service.pricingModel ==
+                                        PricingModel.hourly)
+                                      Text(
+                                        l10n.perHour,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .labelSmall,
+                                      ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+            ),
+          );
+        },
       ),
     );
   }

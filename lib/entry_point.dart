@@ -13,10 +13,10 @@ class EntryPoint extends StatefulWidget {
 }
 
 class _EntryPointState extends State<EntryPoint> {
-  final List _pages = const [
+  final List<Widget> _pages = const [
     BookingHomeScreen(),
-    DiscoverScreen(),
-    BookmarkScreen(),
+    ServiceListingScreen(),
+    BookingBookmarksScreen(),
     ProfileScreen(),
   ];
   int _currentIndex = 0;
@@ -35,10 +35,12 @@ class _EntryPointState extends State<EntryPoint> {
         src,
         height: 24,
         colorFilter: ColorFilter.mode(
-            color ??
-                Theme.of(context).iconTheme.color!.withOpacity(
-                    Theme.of(context).brightness == Brightness.dark ? 0.3 : 1),
-            BlendMode.srcIn),
+          color ??
+              Theme.of(context).iconTheme.color!.withOpacity(
+                    Theme.of(context).brightness == Brightness.dark ? 0.3 : 1,
+                  ),
+          BlendMode.srcIn,
+        ),
       );
     }
 
@@ -52,50 +54,12 @@ class _EntryPointState extends State<EntryPoint> {
         }
       },
       child: Scaffold(
-        appBar: AppBar(
-          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          leading: const SizedBox(),
-          leadingWidth: 0,
-          centerTitle: false,
-          title: Text(
-            context.l10n.appTitle,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-          ),
-          actions: [
-            IconButton(
-              onPressed: () {
-                Navigator.pushNamed(context, searchScreenRoute);
-              },
-              icon: SvgPicture.asset(
-                "assets/icons/Search.svg",
-                height: 24,
-                colorFilter: ColorFilter.mode(
-                    Theme.of(context).textTheme.bodyLarge!.color!,
-                    BlendMode.srcIn),
-              ),
-            ),
-            IconButton(
-              onPressed: () {
-                Navigator.pushNamed(context, notificationsScreenRoute);
-              },
-              icon: SvgPicture.asset(
-                "assets/icons/Notification.svg",
-                height: 24,
-                colorFilter: ColorFilter.mode(
-                    Theme.of(context).textTheme.bodyLarge!.color!,
-                    BlendMode.srcIn),
-              ),
-            ),
-          ],
-        ),
         body: PageTransitionSwitcher(
           duration: defaultDuration,
-          transitionBuilder: (child, animation, secondAnimation) {
+          transitionBuilder: (child, animation, secondaryAnimation) {
             return FadeThroughTransition(
               animation: animation,
-              secondaryAnimation: secondAnimation,
+              secondaryAnimation: secondaryAnimation,
               child: child,
             );
           },

@@ -9,7 +9,8 @@ Node.js + Fastify backend for the Event & Wedding Booking System.
 - **Dynamic Pricing**: Seasonal, weekend, early-bird, and bulk discount rules
 - **Payments**: Stripe integration (PaymentIntent, webhooks)
 - **Provider Dashboard**: Analytics, availability management, pricing rules
-- **Real-time**: Redis for caching and slot locking (WebSocket ready)
+- **Notifications**: In-app notifications plus Firebase push delivery
+- **Real-time**: Redis for slot locking and Socket.IO user-room updates
 
 ## Tech Stack
 
@@ -17,6 +18,8 @@ Node.js + Fastify backend for the Event & Wedding Booking System.
 - **Framework**: Fastify 4.x
 - **Database**: PostgreSQL 16 + Prisma ORM
 - **Cache**: Redis 7
+- **Realtime**: Socket.IO
+- **Push**: Firebase Admin SDK
 - **Payments**: Stripe
 - **Validation**: Zod
 
@@ -58,6 +61,25 @@ npm run dev
 Server will start at `http://localhost:3000`
 
 API docs available at `http://localhost:3000/docs`
+
+### 5. Run the Full Backend Stack with Docker Compose
+
+From the repo root:
+
+```bash
+docker compose up --build
+```
+
+This starts:
+- PostgreSQL 16 on `localhost:5432`
+- Redis 7 on `localhost:6379`
+- The Fastify backend on `http://localhost:3000`
+
+To seed sample data after the stack is up:
+
+```bash
+docker compose exec backend npm run db:seed
+```
 
 ## Database Schema
 
@@ -110,6 +132,8 @@ Key entities:
 - `POST /api/v1/users/bookmarks` - Add bookmark
 - `DELETE /api/v1/users/bookmarks/:id` - Remove bookmark
 - `GET /api/v1/users/notifications` - Get notifications
+- `POST /api/v1/users/device-tokens` - Register mobile device token
+- `DELETE /api/v1/users/device-tokens` - Unregister mobile device token
 
 ### Provider Dashboard
 - `GET /api/v1/provider/dashboard` - Dashboard stats
@@ -145,6 +169,17 @@ npm run db:studio    # Open Prisma Studio
 npm test             # Run tests
 ```
 
+## CI
+
+GitHub Actions CI is defined in `.github/workflows/ci.yml`.
+
+It currently runs:
+- Flutter dependency install, analysis, and tests
+- Backend `npm ci`
+- Prisma client generation
+- JavaScript syntax checks with `node --check`
+- Backend Jest tests
+
 ## Environment Variables
 
 ```env
@@ -161,6 +196,9 @@ REDIS_URL="redis://localhost:6379"
 # Stripe
 STRIPE_SECRET_KEY="sk_test_..."
 STRIPE_WEBHOOK_SECRET="whsec_..."
+
+# Firebase Admin
+FIREBASE_SERVICE_ACCOUNT_JSON="{\"type\":\"service_account\",...}"
 
 # Server
 PORT=3000

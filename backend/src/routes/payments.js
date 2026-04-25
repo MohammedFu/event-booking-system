@@ -1,10 +1,14 @@
 const zod = require('zod');
 const prisma = require('../lib/prisma');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const {
+  createNotification,
+  createNotifications,
+} = require('../lib/notifications');
 
 // Validation schemas
 const createIntentSchema = zod.object({
-  amount: zod.number().positive(),
+  amount: zod.number().positive().optional(),
   currency: zod.string().default('YER'),
   bookingId: zod.string().uuid(),
 });
@@ -44,6 +48,13 @@ async function routes(fastify, options) {
           id: validated.bookingId,
           consumerId: userId,
         },
+        select: {
+          id: true,
+          status: true,
+          currency: true,
+          depositAmount: true,
+          depositPaid: true,
+        },
       });
 
       if (!booking) {
@@ -62,11 +73,46 @@ async function routes(fastify, options) {
         });
       }
 
+      if (booking.depositPaid) {
+        return reply.code(400).send({
+          success: false,
+          error: 'Bad Request',
+          message: 'Deposit has already been paid',
+        });
+      }
+
+      const expectedAmount = Math.round(
+        (parseFloat(booking.depositAmount || 0) || 0) * 100,
+      );
+
+      if (expectedAmount <= 0) {
+        return reply.code(400).send({
+          success: false,
+          error: 'Bad Request',
+          message: 'This booking does not have a payable deposit',
+        });
+      }
+
+      const requestedAmount = validated.amount ? Math.round(validated.amount) : expectedAmount;
+      const currency = (validated.currency || booking.currency || 'YER').toUpperCase();
+
+      if (requestedAmount !== expectedAmount) {
+        fastify.log.warn(
+          {
+            bookingId: booking.id,
+            userId,
+            requestedAmount,
+            expectedAmount,
+          },
+          'Ignoring mismatched payment amount and using server-calculated deposit',
+        );
+      }
+
       try {
         // Create PaymentIntent with Stripe
         const paymentIntent = await stripe.paymentIntents.create({
-          amount: Math.round(validated.amount), // Amount in cents
-          currency: validated.currency.toLowerCase(),
+          amount: expectedAmount,
+          currency: currency.toLowerCase(),
           automatic_payment_methods: { enabled: true },
           metadata: {
             bookingId: validated.bookingId,
@@ -78,8 +124,8 @@ async function routes(fastify, options) {
         await prisma.payment.create({
           data: {
             bookingId: validated.bookingId,
-            amount: validated.amount / 100, // Store in dollars
-            currency: validated.currency.toUpperCase(),
+            amount: expectedAmount / 100,
+            currency,
             paymentMethod: 'CARD',
             stripePaymentIntentId: paymentIntent.id,
             status: 'PENDING',
@@ -94,8 +140,8 @@ async function routes(fastify, options) {
           data: {
             clientSecret: paymentIntent.client_secret,
             paymentIntentId: paymentIntent.id,
-            amount: validated.amount,
-            currency: validated.currency,
+            amount: expectedAmount,
+            currency,
           },
         };
       } catch (error) {
@@ -132,8 +178,58 @@ async function routes(fastify, options) {
       const validated = confirmPaymentSchema.parse(request.body);
 
       try {
+        const paymentRecord = await prisma.payment.findFirst({
+          where: {
+            stripePaymentIntentId: validated.paymentIntentId,
+            booking: {
+              consumerId: userId,
+            },
+          },
+          include: {
+            booking: {
+              select: {
+                id: true,
+                depositPaid: true,
+                items: {
+                  select: {
+                    providerId: true,
+                    serviceId: true,
+                  },
+                },
+              },
+            },
+          },
+        });
+
+        if (!paymentRecord) {
+          return reply.code(404).send({
+            success: false,
+            error: 'Not Found',
+            message: 'Payment record not found',
+          });
+        }
+
+        if (paymentRecord.status === 'SUCCEEDED' && paymentRecord.booking.depositPaid) {
+          return {
+            success: true,
+            data: paymentRecord,
+            message: 'Payment already confirmed',
+          };
+        }
+
         // Retrieve PaymentIntent from Stripe
         const paymentIntent = await stripe.paymentIntents.retrieve(validated.paymentIntentId);
+
+        if (
+          paymentIntent.metadata?.userId !== userId ||
+          paymentIntent.metadata?.bookingId !== paymentRecord.bookingId
+        ) {
+          return reply.code(403).send({
+            success: false,
+            error: 'Forbidden',
+            message: 'You are not allowed to confirm this payment',
+          });
+        }
 
         if (paymentIntent.status !== 'succeeded') {
           return reply.code(400).send({
@@ -144,9 +240,9 @@ async function routes(fastify, options) {
         }
 
         // Update payment record
-        const payment = await prisma.payment.updateMany({
+        const updatedPayment = await prisma.payment.update({
           where: {
-            stripePaymentIntentId: validated.paymentIntentId,
+            id: paymentRecord.id,
           },
           data: {
             status: 'SUCCEEDED',
@@ -154,16 +250,8 @@ async function routes(fastify, options) {
           },
         });
 
-        if (payment.count === 0) {
-          return reply.code(404).send({
-            success: false,
-            error: 'Not Found',
-            message: 'Payment record not found',
-          });
-        }
-
         // Get booking ID from metadata
-        const bookingId = paymentIntent.metadata.bookingId;
+        const bookingId = paymentRecord.bookingId;
 
         // Update booking deposit status
         await prisma.booking.update({
@@ -171,10 +259,51 @@ async function routes(fastify, options) {
           data: { depositPaid: true },
         });
 
-        // Get updated payment
-        const updatedPayment = await prisma.payment.findFirst({
-          where: { stripePaymentIntentId: validated.paymentIntentId },
-        });
+        if (!paymentRecord.booking.depositPaid) {
+          const providerIds = [...new Set(paymentRecord.booking.items.map((item) => item.providerId))];
+          const providers = await prisma.provider.findMany({
+            where: {
+              id: { in: providerIds },
+            },
+            select: {
+              id: true,
+              userId: true,
+            },
+          });
+
+          const providerUserIds = new Map(
+            providers.map((provider) => [provider.id, provider.userId]),
+          );
+
+          await Promise.all([
+            createNotification({
+              userId,
+              type: 'SYSTEM',
+              title: 'Deposit received',
+              body: 'Your deposit payment was received successfully.',
+              data: {
+                bookingId,
+                paymentIntentId: validated.paymentIntentId,
+                audience: 'consumer',
+              },
+            }),
+            createNotifications(
+              paymentRecord.booking.items.map((item) => ({
+                userId: providerUserIds.get(item.providerId),
+                type: 'PAYMENT_RECEIVED',
+                title: 'Payment received',
+                body: 'A customer deposit was received for an upcoming booking.',
+                data: {
+                  bookingId,
+                  serviceId: item.serviceId,
+                  paymentIntentId: validated.paymentIntentId,
+                  serviceTitle: item.service?.title,
+                  audience: 'provider',
+                },
+              })),
+            ),
+          ]);
+        }
 
         return {
           success: true,

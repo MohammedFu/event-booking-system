@@ -26,7 +26,11 @@ class _ProviderServiceManagementScreenState
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
-    _fetchServices();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _fetchServices();
+      }
+    });
   }
 
   Future<void> _fetchServices() async {

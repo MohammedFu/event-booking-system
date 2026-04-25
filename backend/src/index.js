@@ -10,6 +10,7 @@ const swaggerUi = require("@fastify/swagger-ui");
 const multipart = require("@fastify/multipart");
 const path = require("path");
 const fs = require("fs");
+const { initializeRealtimeServer } = require("./lib/realtime");
 require("dotenv").config();
 
 // Ensure upload directory exists
@@ -172,6 +173,7 @@ async function start() {
   try {
     await registerPlugins();
     await registerRoutes();
+    initializeRealtimeServer(fastify);
 
     const port = process.env.PORT || 3000;
     const host = process.env.HOST || "0.0.0.0";

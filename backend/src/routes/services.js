@@ -1,5 +1,6 @@
 const zod = require('zod');
 const prisma = require('../lib/prisma');
+const { normalizeServiceMedia } = require('../lib/public-url');
 
 // Validation schemas
 const getServicesSchema = zod.object({
@@ -136,7 +137,7 @@ async function routes(fastify, options) {
 
       return {
         success: true,
-        data: services,
+        data: services.map((service) => normalizeServiceMedia(service, request)),
         meta: {
           page: params.page,
           limit: params.limit,
@@ -211,7 +212,7 @@ async function routes(fastify, options) {
 
       return {
         success: true,
-        data: services,
+        data: services.map((service) => normalizeServiceMedia(service, request)),
         meta: {
           page,
           limit,
@@ -278,7 +279,7 @@ async function routes(fastify, options) {
 
       return {
         success: true,
-        data: service,
+        data: normalizeServiceMedia(service, request),
       };
     },
   });

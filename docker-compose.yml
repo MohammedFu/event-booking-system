@@ -1,0 +1,62 @@
+name: event-booking-stack
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: event_booking
+      POSTGRES_USER: eventbooker
+      POSTGRES_PASSWORD: eventbooker
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eventbooker -d event_booking"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  backend:
+    build:
+      context: ./backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      NODE_ENV: development
+      HOST: 0.0.0.0
+      PORT: 3000
+      DATABASE_URL: postgresql://eventbooker:eventbooker@postgres:5432/event_booking?schema=public
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: dev-secret
+      JWT_REFRESH_SECRET: dev-refresh-secret
+      STRIPE_SECRET_KEY: sk_test_placeholder
+      STRIPE_WEBHOOK_SECRET: whsec_placeholder
+      AWS_ACCESS_KEY_ID: ""
+      AWS_SECRET_ACCESS_KEY: ""
+      AWS_S3_BUCKET: ""
+      AWS_REGION: us-east-1
+      SENDGRID_API_KEY: ""
+      FROM_EMAIL: noreply@eventbooker.com
+      UPLOAD_DIR: uploads
+    command: sh -c "npx prisma migrate deploy && npm start"
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./backend/uploads:/app/uploads
+
+volumes:
+  postgres_data:

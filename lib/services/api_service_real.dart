@@ -44,6 +44,7 @@ class ApiServiceReal {
         await _client.saveTokens(
           accessToken: data['accessToken'],
           refreshToken: data['refreshToken'],
+          expiresAt: data['expiresAt'],
         );
 
         // Parse user data if available
@@ -105,6 +106,7 @@ class ApiServiceReal {
         await _client.saveTokens(
           accessToken: data['accessToken'],
           refreshToken: data['refreshToken'],
+          expiresAt: data['expiresAt'],
         );
 
         // Parse user data if available
@@ -145,7 +147,7 @@ class ApiServiceReal {
 
   Future<ApiResponse<void>> logout() async {
     try {
-      final refreshToken = await _client.getAccessToken();
+      final refreshToken = await _client.getRefreshToken();
 
       if (refreshToken != null) {
         await _client.post('/api/v1/auth/logout', data: {
@@ -190,6 +192,7 @@ class ApiServiceReal {
         await _client.saveTokens(
           accessToken: data['accessToken'],
           refreshToken: data['refreshToken'],
+          expiresAt: data['expiresAt'],
         );
 
         return ApiResponse.ok(
@@ -354,7 +357,6 @@ class ApiServiceReal {
   // ═══════════════════════════════════════════════════════════
 
   Future<ApiResponse<BookingModel>> createBooking({
-    required String consumerId,
     required String eventType,
     required DateTime eventDate,
     String? eventName,
@@ -375,7 +377,7 @@ class ApiServiceReal {
 
       final response = await _client.post('/api/v1/bookings', data: {
         'eventType': eventType.toUpperCase(),
-        'eventDate': eventDate.toIso8601String(),
+        'eventDate': eventDate.toIso8601String().split('T')[0],
         'eventName': eventName,
         'items': items,
         'specialRequests': specialRequests,
@@ -627,10 +629,10 @@ class ApiServiceReal {
     }
   }
 
-  Future<ApiResponse<void>> markAllNotificationsRead(String userId) async {
+  Future<ApiResponse<void>> markAllNotificationsRead() async {
     try {
       final response =
-          await _client.patch('/api/v1/users/notifications/read-all');
+          await _client.post('/api/v1/users/notifications/read-all');
 
       if (response.statusCode == 200 && response.data['success'] == true) {
         return ApiResponse.ok(null);
@@ -638,6 +640,50 @@ class ApiServiceReal {
 
       return ApiResponse.fail(
         response.data['message'] ?? 'Failed to mark all notifications as read',
+        statusCode: response.statusCode,
+      );
+    } catch (e) {
+      return ApiResponse.fail(e.toString());
+    }
+  }
+
+  Future<ApiResponse<void>> registerDeviceToken({
+    required String token,
+    required String platform,
+  }) async {
+    try {
+      final response = await _client.post('/api/v1/users/device-tokens', data: {
+        'token': token,
+        'platform': platform,
+      });
+
+      if ((response.statusCode == 200 || response.statusCode == 201) &&
+          response.data['success'] == true) {
+        return ApiResponse.ok(null);
+      }
+
+      return ApiResponse.fail(
+        response.data['message'] ?? 'Failed to register device token',
+        statusCode: response.statusCode,
+      );
+    } catch (e) {
+      return ApiResponse.fail(e.toString());
+    }
+  }
+
+  Future<ApiResponse<void>> unregisterDeviceToken(String token) async {
+    try {
+      final response =
+          await _client.delete('/api/v1/users/device-tokens', data: {
+        'token': token,
+      });
+
+      if (response.statusCode == 200 && response.data['success'] == true) {
+        return ApiResponse.ok(null);
+      }
+
+      return ApiResponse.fail(
+        response.data['message'] ?? 'Failed to unregister device token',
         statusCode: response.statusCode,
       );
     } catch (e) {
@@ -1015,9 +1061,8 @@ class ApiServiceReal {
       if (minDurationHours != null) data['minDurationHours'] = minDurationHours;
       if (maxDurationHours != null) data['maxDurationHours'] = maxDurationHours;
 
-      final serializedAttributes = attributes != null
-          ? _serializeGenericAttributes(attributes)
-          : null;
+      final serializedAttributes =
+          attributes != null ? _serializeGenericAttributes(attributes) : null;
       if (serializedAttributes != null && serializedAttributes.isNotEmpty) {
         data['attributes'] = serializedAttributes;
       }
@@ -1183,7 +1228,8 @@ class ApiServiceReal {
         (e) => e.name.toUpperCase() == (json['status'] ?? '').toString(),
         orElse: () => BookingStatus.pending,
       ),
-      specialRequests: json['specialRequests'] ?? bookingJson['specialRequests'],
+      specialRequests:
+          json['specialRequests'] ?? bookingJson['specialRequests'],
       service: serviceJson.isNotEmpty
           ? ServiceModel(
               id: serviceJson['id'] ?? json['serviceId'] ?? '',
@@ -1241,7 +1287,11 @@ class ApiServiceReal {
       ),
       basePrice: _parseDouble(json['basePrice']),
       currency: json['currency'] ?? 'USD',
-      images: (json['images'] as List<dynamic>?)?.cast<String>() ?? [],
+      pricingModel: PricingModel.values.firstWhere(
+        (e) => e.name.toUpperCase() == (json['pricingModel'] ?? '').toString(),
+        orElse: () => PricingModel.flat,
+      ),
+      images: DioClient.normalizeMediaUrls(json['images']),
       tags: (json['tags'] as List<dynamic>?)?.cast<String>() ?? [],
       attributes: _parseServiceAttributes(json['attributes'] ?? {}),
       maxCapacity: json['maxCapacity'],
@@ -1251,6 +1301,7 @@ class ApiServiceReal {
           : null,
       isAvailable: json['isAvailable'] ?? true,
       provider: provider != null ? _parseProvider(provider) : null,
+      cancellationPolicy: _parseCancellationPolicy(json['cancellationPolicy']),
       pricingRules: (json['pricingRules'] as List<dynamic>?)
               ?.map((r) => _parsePricingRule(r))
               .toList() ??
@@ -1298,8 +1349,8 @@ class ApiServiceReal {
       rating: _parseDouble(json['rating']),
       reviewCount: json['reviewCount'] ?? 0,
       city: json['city'],
-      logoUrl: json['logoUrl'],
-      coverUrl: json['coverUrl'],
+      logoUrl: DioClient.normalizeMediaUrl(json['logoUrl']?.toString()),
+      coverUrl: DioClient.normalizeMediaUrl(json['coverUrl']?.toString()),
       isVerified: json['isVerified'] ?? false,
     );
   }
@@ -1341,6 +1392,12 @@ class ApiServiceReal {
   }
 
   static BookingItem _parseBookingItem(Map<String, dynamic> json) {
+    final service =
+        json['service'] != null ? _parseService(json['service']) : null;
+    final provider = json['provider'] != null
+        ? _parseProvider(json['provider'])
+        : service?.provider;
+
     return BookingItem(
       id: json['id'] ?? '',
       bookingId: json['bookingId'] ?? '',
@@ -1357,9 +1414,8 @@ class ApiServiceReal {
         orElse: () => BookingStatus.pending,
       ),
       specialRequests: json['specialRequests'],
-      service: json['service'] != null ? _parseService(json['service']) : null,
-      provider:
-          json['provider'] != null ? _parseProvider(json['provider']) : null,
+      service: service,
+      provider: provider,
     );
   }
 
@@ -1386,20 +1442,39 @@ class ApiServiceReal {
       providerId: json['providerId'] ?? '',
       rating: json['rating'],
       comment: json['comment'],
-      images: (json['images'] as List<dynamic>?)?.cast<String>() ?? [],
+      images: DioClient.normalizeMediaUrls(json['images']),
       isAnonymous: json['isAnonymous'] ?? false,
       createdAt: DateTime.parse(json['createdAt']),
     );
   }
 
+  static CancellationPolicy _parseCancellationPolicy(dynamic data) {
+    if (data is! Map<String, dynamic>) {
+      return const CancellationPolicy();
+    }
+
+    return CancellationPolicy(
+      freeCancellationHours: data['freeCancellationHours'] ?? 72,
+      partialRefundPercentage: _parseDouble(
+        data['partialRefundPercentage'],
+        defaultValue: 50,
+      ),
+      depositRefundable: data['depositRefundable'] ?? false,
+      description: data['description'],
+    );
+  }
+
   static NotificationModel _parseNotification(Map<String, dynamic> json) {
+    final rawData = json['data'];
     return NotificationModel(
       id: json['id'] ?? '',
       userId: json['userId'] ?? '',
-      type: json['type'] ?? '',
+      type: _normalizeNotificationType(json['type']),
       title: json['title'] ?? '',
       body: json['body'] ?? '',
-      data: json['data'] ?? {},
+      data: rawData is Map<String, dynamic>
+          ? Map<String, dynamic>.from(rawData)
+          : const {},
       isRead: json['isRead'] ?? false,
       createdAt: DateTime.parse(json['createdAt']),
     );
@@ -1471,16 +1546,23 @@ class ApiServiceReal {
   // ═══════════════════════════════════════════════════════════
 
   static TimeOfDay _parseTimeString(String timeStr) {
-    final parts = timeStr.split(':');
+    final match = RegExp(r'(\d{2}):(\d{2})').firstMatch(timeStr);
+    if (match == null) {
+      return const TimeOfDay(hour: 0, minute: 0);
+    }
+
     return TimeOfDay(
-      hour: int.parse(parts[0]),
-      minute: int.parse(parts[1]),
+      hour: int.parse(match.group(1)!),
+      minute: int.parse(match.group(2)!),
     );
   }
 
   static TimeOfDay _parseTimeOfDay(dynamic time) {
     if (time is String) {
       return _parseTimeString(time);
+    }
+    if (time is DateTime) {
+      return TimeOfDay(hour: time.hour, minute: time.minute);
     }
     if (time is Map<String, dynamic>) {
       return TimeOfDay(
@@ -1512,6 +1594,10 @@ class ApiServiceReal {
     if (value is num) return value.toDouble();
     if (value is String) return double.tryParse(value) ?? defaultValue;
     return defaultValue;
+  }
+
+  static String _normalizeNotificationType(dynamic value) {
+    return value?.toString().toLowerCase().replaceAll('-', '_') ?? '';
   }
 
   // ═══════════════════════════════════════════════════════════

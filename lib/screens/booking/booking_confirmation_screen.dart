@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:munasabati/constants.dart';
 import 'package:munasabati/l10n/app_localizations.dart';
 import 'package:munasabati/route/route_constants.dart';
+import 'package:munasabati/services/app_analytics_service.dart';
+import 'package:munasabati/services/auth_provider.dart';
 import 'package:munasabati/services/booking_provider.dart';
+import 'package:munasabati/services/stripe_payment_service.dart';
 import 'package:provider/provider.dart';
 
 class BookingConfirmationScreen extends StatefulWidget {
@@ -15,8 +18,16 @@ class BookingConfirmationScreen extends StatefulWidget {
 
 class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
   String _eventType = 'wedding';
-  String _paymentMethod = 'card';
+  late String _paymentMethod;
+  bool _isSubmitting = false;
   final _eventNameController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _paymentMethod =
+        StripePaymentService.instance.isConfigured ? 'card' : 'pay_later';
+  }
 
   @override
   void dispose() {
@@ -80,7 +91,6 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
               borderRadius: BorderRadius.circular(defaultBorderRadious),
             ),
           ),
-          onChanged: (val) => _eventNameController.text = val,
         ),
         const SizedBox(height: 12),
         DropdownButtonFormField<String>(
@@ -223,25 +233,20 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
           icon: Icons.credit_card,
           value: 'card',
           label: l10n.creditDebitCard,
-          subtitle: l10n.cardBrands,
+          subtitle: StripePaymentService.instance.isConfigured
+              ? l10n.cardBrands
+              : context.tr('card_payment_unavailable'),
           selected: _paymentMethod == 'card',
+          enabled: StripePaymentService.instance.isConfigured,
           onTap: () => setState(() => _paymentMethod = 'card'),
         ),
         _PaymentOption(
-          icon: Icons.account_balance,
-          value: 'bank_transfer',
-          label: l10n.bankTransfer,
-          subtitle: l10n.directBankTransfer,
-          selected: _paymentMethod == 'bank_transfer',
-          onTap: () => setState(() => _paymentMethod = 'bank_transfer'),
-        ),
-        _PaymentOption(
-          icon: Icons.account_balance_wallet,
-          value: 'wallet',
-          label: l10n.walletLabel,
-          subtitle: l10n.payFromWalletBalance,
-          selected: _paymentMethod == 'wallet',
-          onTap: () => setState(() => _paymentMethod = 'wallet'),
+          icon: Icons.schedule_outlined,
+          value: 'pay_later',
+          label: context.tr('pay_later'),
+          subtitle: context.tr('pay_later_subtitle'),
+          selected: _paymentMethod == 'pay_later',
+          onTap: () => setState(() => _paymentMethod = 'pay_later'),
         ),
       ],
     );
@@ -262,7 +267,7 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
         ],
       ),
       child: SafeArea(
-        child: provider.isLoading
+        child: provider.isLoading || _isSubmitting
             ? const Center(
                 child: Padding(
                   padding: EdgeInsets.all(16),
@@ -270,25 +275,120 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
                 ),
               )
             : ElevatedButton(
-                onPressed: () async {
-                  provider.setEventType(_eventType);
-                  await provider.createBooking();
-                  if (context.mounted) {
-                    Navigator.pushNamed(
-                        context, bookingConfirmationScreenRoute);
-                  }
-                },
+                onPressed: () => _submitBooking(provider),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
                 child: Text(
-                  l10n.confirmAndPayDeposit(
-                    '\$${(provider.cartTotal * 0.25).toInt()}',
-                  ),
+                  _paymentMethod == 'card'
+                      ? l10n.confirmAndPayDeposit(
+                          formatPrice(provider.cartTotal * 0.25),
+                        )
+                      : l10n.confirmBooking,
                 ),
               ),
       ),
     );
+  }
+
+  Future<void> _submitBooking(BookingProvider provider) async {
+    final auth = context.read<AuthProvider>();
+    if (!auth.isAuthenticated) {
+      Navigator.pushNamed(context, authScreenRoute);
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
+
+    provider.setEventType(_eventType);
+    final success = await provider.createBooking(
+      eventName: _eventNameController.text.trim().isEmpty
+          ? null
+          : _eventNameController.text.trim(),
+    );
+
+    if (!mounted) return;
+
+    if (!success) {
+      setState(() => _isSubmitting = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            provider.error ?? 'Unable to complete your booking.',
+          ),
+          backgroundColor: errorColor,
+        ),
+      );
+      return;
+    }
+
+    var booking = provider.lastCreatedBooking;
+    if (booking != null) {
+      await AppAnalyticsService.instance.logBookingCreated(
+        bookingId: booking.id,
+        eventType: booking.eventType,
+        itemCount: booking.items.length,
+        totalAmount: booking.totalAmount,
+      );
+      if (!mounted) return;
+    }
+
+    if (booking != null && _paymentMethod == 'card') {
+      final paymentResult = await StripePaymentService.instance.payBookingDeposit(
+        booking: booking,
+        customerName: auth.user?.fullName,
+        customerEmail: auth.user?.email,
+      );
+
+      if (!mounted) return;
+
+      if (paymentResult.booking != null) {
+        booking = paymentResult.booking;
+        provider.updateBookingLocally(booking!);
+      }
+
+      final snackBar = _buildPaymentSnackBar(paymentResult);
+      if (snackBar != null) {
+        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+      }
+    }
+
+    setState(() => _isSubmitting = false);
+
+    Navigator.pushReplacementNamed(
+      context,
+      bookingSuccessScreenRoute,
+      arguments: booking,
+    );
+  }
+
+  SnackBar? _buildPaymentSnackBar(BookingDepositPaymentResult paymentResult) {
+    switch (paymentResult.status) {
+      case BookingDepositPaymentStatus.succeeded:
+        return SnackBar(
+          content: Text(context.tr('deposit_paid_successfully')),
+          backgroundColor: successColor,
+        );
+      case BookingDepositPaymentStatus.cancelled:
+        return SnackBar(
+          content: Text(
+            paymentResult.message ?? context.tr('deposit_payment_cancelled'),
+          ),
+          backgroundColor: warningColor,
+        );
+      case BookingDepositPaymentStatus.failed:
+        return SnackBar(
+          content: Text(
+            paymentResult.message ?? context.tr('deposit_payment_failed'),
+          ),
+          backgroundColor: errorColor,
+        );
+      case BookingDepositPaymentStatus.unavailable:
+        return SnackBar(
+          content: Text(context.tr('booking_created_payment_pending')),
+          backgroundColor: warningColor,
+        );
+    }
   }
 }
 
@@ -298,6 +398,7 @@ class _PaymentOption extends StatelessWidget {
   final String label;
   final String subtitle;
   final bool selected;
+  final bool enabled;
   final VoidCallback onTap;
 
   const _PaymentOption({
@@ -306,20 +407,23 @@ class _PaymentOption extends StatelessWidget {
     required this.label,
     required this.subtitle,
     required this.selected,
+    this.enabled = true,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: enabled ? onTap : null,
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(defaultBorderRadious),
           border: Border.all(
-            color: selected
+            color: !enabled
+                ? Theme.of(context).disabledColor.withOpacity(0.2)
+                : selected
                 ? primaryColor
                 : Theme.of(context).dividerColor.withOpacity(0.3),
           ),
@@ -327,7 +431,14 @@ class _PaymentOption extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(icon, color: selected ? primaryColor : null),
+            Icon(
+              icon,
+              color: !enabled
+                  ? Theme.of(context).disabledColor
+                  : selected
+                      ? primaryColor
+                      : null,
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -337,11 +448,18 @@ class _PaymentOption extends StatelessWidget {
                     label,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           fontWeight: FontWeight.w600,
+                          color: enabled
+                              ? null
+                              : Theme.of(context).disabledColor,
                         ),
                   ),
                   Text(
                     subtitle,
-                    style: Theme.of(context).textTheme.labelSmall,
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: enabled
+                              ? null
+                              : Theme.of(context).disabledColor,
+                        ),
                   ),
                 ],
               ),
@@ -349,7 +467,7 @@ class _PaymentOption extends StatelessWidget {
             Radio<String>(
               value: value,
               groupValue: selected ? value : '',
-              onChanged: (_) => onTap(),
+              onChanged: enabled ? (_) => onTap() : null,
               activeColor: primaryColor,
             ),
           ],

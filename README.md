@@ -1,216 +1,373 @@
-# Flutter E-Commerce App Template
+# Event & Wedding Booking System (Munasabati)
 
-<p align="center">
-  <img src="readme%20image/Build%20you%20shop%20app%20in%20days.png" alt="Build you shop app in days" style="width: 500px; height: auto;">
-</p>
+A comprehensive event booking platform built with Flutter (frontend) and Node.js (backend). Users can book halls, cars, photographers, and entertainers for their events.
 
-<p align="center">
-  The FlutterShop template makes it easier to develop an e-commerce app using Flutter. It includes all the necessary pages to build a shopping app for both Android and iOS using flutter.
-</p>
+## 🚀 Quick Start Guide
 
-<!-- Buttons -->
-<p align="center">
-  <a href="https://cutt.ly/fefxdqE9" style="text-decoration: none;" target="_blank">
-    <img src="readme image/buy_now_btn.png" alt="Full template" style="margin-right: 32px; width: 170px; height: 50px;">
-  </a>
-  &nbsp;&nbsp;&nbsp;&nbsp;
-  <a href="https://cutt.ly/1efxdynN" style="text-decoration: none;" target="_blank">
-    <img src="readme image/preview_btn.png" alt="Preview" style="width: 136px; height: 50px;">
-  </a>
-</p>
+This guide will help you set up and run the entire application on your new laptop.
 
-<!-- Device image -->
-</br >
-</br >
-<p align="center">
-  <img src="readme image/Device_frame.png" alt="Ecommerce app Home, product details page" style="width: 1100px; height: auto;">
-</p>
-</br >
-</br >
+---
 
-This shop app template comes with 100+ screens. Some of these pages are Splash, Login, Signup, Home, Product, Search, Cart, Profile, Payment, Wallet, Order Tracking, and Order History. Additionally, all pages support both light and dark themes.You just need to connect the UI to your preferred backend, such as Firebase, WordPress, or your custom API. You can do anything you want with it.
+## 📋 Prerequisites
 
-<!-- Gif preview -->
-</br >
-</br >
-<p align="center">
-  <img src="readme image/FlutterShop_Intro.gif" alt="Build you shop app in days" style="width: 643px; height: auto;">
-</p>
-</br >
-</br >
+Before you begin, ensure you have the following installed on your Windows laptop:
 
-### Well organized project very easy to customize
+### 1. **Node.js** (Required for Backend)
 
-![FlutterShop E-commerce Template Project Structure](https://public-files.gumroad.com/v1kbfvdugf3urvw03qrqgmc5pl1c)
+- Download and install Node.js LTS version (v20 or higher)
+- Visit: https://nodejs.org/
+- During installation, accept all default options
+- Verify installation: Open Command Prompt/PowerShell and run:
+  ```bash
+  node --version
+  npm --version
+  ```
 
-<!-- Full preview -->
-</br >
-</br >
-<p align="center">
-  <img src="https://public-files.gumroad.com/m3v3lyyipbzczcws5gcuhpbkmczk" alt="Build you shop app in days" style="width: 100%; height: auto;">
-</p>
+### 2. **Flutter SDK** (Required for Frontend)
 
-### Loading is no longer boring [New update V1.1] [Doc](https://abu-anwar.gitbook.io/fluttershop-doc/custom-loading)
+- Download Flutter SDK for Windows
+- Visit: https://flutter.dev/docs/get-started/install/windows
+- Extract the downloaded zip file to a location (e.g., `C:\flutter`)
+- Add Flutter to your PATH:
+  - Search for "Edit the system environment variables" in Windows
+  - Click "Environment Variables"
+  - Under "System variables", find "Path" and click "Edit"
+  - Click "New" and add `C:\flutter\bin`
+  - Click OK on all dialogs
+- Verify installation: Open a NEW Command Prompt/PowerShell and run:
+  ```bash
+  flutter --version
+  flutter doctor
+  ```
+- Follow any instructions from `flutter doctor` to fix missing dependencies (e.g., Android Studio, Visual Studio, etc.)
 
-The progress indicator that comes with Flutter, by default is okay in most places, but not in every place. Especially when you build an ecommerce app. This is why we have created a custom loading effect that boosts your user engagement even during the loading process. This kind of loading is common in popular apps like YouTube and LinkedIn. It's a small detail, but it makes a big difference.
-![FlutterShop Custom loading](https://public-files.gumroad.com/qqnmt9nu5677thkq1961tlwj405u)
+### 3. **PostgreSQL** (Required for Database)
 
-## Screens on the FlutterShop E-commerce Template
+- Download and install PostgreSQL
+- Visit: https://www.postgresql.org/download/windows/
+- During installation:
+  - Set a password (remember it, you'll need it later)
+  - Accept default port (5432)
+- Verify installation: Open SQL Shell (psql) from Start Menu and login with your password
 
-As mentioned, this kit contains 100+ nicely crafted minimal screens that cover everything you need!👇
+### 4. **Redis** (Required for Caching & Slot Locking)
 
-### Onboarding
+- Download Redis for Windows
+- Visit: https://github.com/microsoftarchive/redis/releases
+- Download the .msi installer and run it
+- Accept default options
+- Redis will run as a Windows service
 
-- Onboarding Choose item
-- Onboarding Add to cart
-- Onboarding Pay online
-- Onboarding Track order
-- Onboarding Find store
-- Notification permission
-- Select language
+### 5. **Git** (Optional but Recommended)
 
-### Authentication
+- Download and install Git
+- Visit: https://git-scm.com/download/win
+- Accept default options during installation
 
-- Log in
-- Forgot password
-  - Choose verification method
-  - Verification code
-- Set new password
-- Done reset password
-- Sign up
-  - Setup profile
-  - Verification code
-- Successfully sign up
-- Terms and conditions
-- Enable fingerprint
-- Enable face ID
+---
 
-### Product
+## 🛠️ Backend Setup
 
-- Product page
-  - Notify when available (Out of stock)
-  - Buy Now
-  - Product details
-  - Product reviews
-  - Add review
-  - Shipping methods
-  - Product return policy
-  - Product size guide
-  - Store Pickup Availability
-  - Added to cart message
-  - Product gallery (Will be added soon)
+### Step 1: Navigate to Backend Folder
 
-### Main Page
+Open Command Prompt/PowerShell and navigate to the backend directory:
 
-- Home page
-- On sales page
-- Kids product page
-- Brand page
-- Discover Page (Categories)
-  - Style 1
-  - Style 2 (Will be added soon)
-  - Style 3 (Will be added soon)
-- Bookmark products page
+```bash
+cd d:\event-booking-system\backend
+```
 
-### Search
+### Step 2: Install Node.js Dependencies
 
-- Recent search (Search history)
-- Search suggestions
-- Search filters
-  - Size filter
-  - Color filter
-  - Brand filter
-  - Price filter
-  - Sort by
-- Search results
-  - Product not found
+```bash
+npm install
+```
 
-### Cart
+This will install all required packages listed in `package.json`.
 
-- Products on Cart
-- Empty cart
-- Choose address
-- Review & payment
-- Checkout / Payment method
-  - Select card
-  - Pay with cash
-  - Use credit
-- Thanks for order
-- Add new card
-- Scan card (Will be added soon)
+### Step 3: Set Up Environment Variables
 
-### Profile
+```bash
+copy .env.example .env
+```
 
-- Account
-  - Normal version
-  - Pro version
-  - Profile
-    - Edit profile
-  - Notifications
-    - Empty notification
-    - Enable notification
-    - Notification options
-  - Select Language
-  - Addresses
-    - Empty address
-    - Add new address
-  - Add number
-    - Verification code
-  - Selected location
-  - Payment
-    - Cards
-    - Empty payment
-  - Wallet
-    - Empty Wallet
-    - Wallet history
-  - Help & Chat (Support)
-    - Chat
-  - Preferences
+Now edit the `.env` file with a text editor (Notepad, VS Code, etc.):
 
-### Order
+```bash
+notepad .env
+```
 
-- Account Orders
-  - Processing orders
-    - Cancel order
-  - Canceled orders
-  - Delivered orders
-  - Return orders (Will be added soon)
-  - More screens added in that sector soon
+Update the following values in `.env`:
 
-### Return & Request (Will be added soon)
+```env
+# Database Connection
+DATABASE_URL="postgresql://postgres:YOUR_PASSWORD@localhost:5432/event_booking?schema=public"
 
-- Return order list
-- Empty return order
-- Return order
-- Return detail
+# JWT Secrets (change these in production!)
+JWT_SECRET="your-super-secret-jwt-key-change-this"
+JWT_REFRESH_SECRET="your-refresh-secret-key-change-this"
 
-### Error & Permission
+# Redis Connection
+REDIS_HOST="localhost"
+REDIS_PORT=6379
 
-- Notification permission
-- No notification
-- Select language
-- No internet
-- Server error
-- Location permissions
-- No search result
-- Empty order list
-- No Address found
-- Empty payment
-- Empty wallet
+# Stripe (optional - for payments)
+STRIPE_SECRET_KEY="sk_test_your_stripe_key"
+STRIPE_WEBHOOK_SECRET="whsec_your_webhook_secret"
 
-and MORE!!!! 🤩
+# Server Port
+PORT=3000
+NODE_ENV=development
+```
 
-If you want to learn how to build ecommerce template on Flutter [watch the playlist on YouTube](https://youtube.com/playlist?list=PLxUBb2A_UUy8OlaNZpS2mfL8xpHcnd_Af), In the first video, we start by making a neat onboarding screen for our shopping app. This works on both Android and iOS because it's made with Flutter. In the next video, we tackle the 'Sign In' and 'Forgot Password' screens, adding some unique error messages. The third video covers the 'Sign Up' and OTP processes. The fourth one is fun – we create the main homepage. In the fifth, we dive into the product page, and in the sixth, we craft an order page with cool features like 'swipe to delete.' Finally, in the seventh video, we design the user profile page.
+**Important:** Replace `YOUR_PASSWORD` with the PostgreSQL password you set during installation.
 
-Visit FlutterLibrary.com to Download the [Flutter e-commerce app template](https://www.flutterlibrary.com/templates/e-commerce-app) & other templates, and components.
+### Step 4: Set Up Database
 
+```bash
+# Run database migrations
+npx prisma migrate dev --name init
 
+# Generate Prisma client
+npx prisma generate
 
-</br >
-</br >
-<!-- Buttons -->
-<p align="center">
-  <a href="https://app.gumroad.com/checkout?product=uxznc&option=B3wWhE6QH46cfm31C7jEmQ%3D%3D&quantity=1&referrer=https://github.com" style="text-decoration: none;" target="_blank">
-    <img src="readme image/buy_now_btn.png" alt="Full template" style="margin-right: 32px; width: 170px; height: 50px;">
-  </a>
-</p>
+# Seed database with sample data
+node prisma/seed.js
+```
+
+### Step 5: Start Backend Server
+
+```bash
+npm run dev
+```
+
+The backend server will start on `http://localhost:3000`
+You should see: `Server listening on http://[::]:3000`
+
+**Keep this terminal open!** The backend needs to keep running.
+
+---
+
+## 📱 Flutter App Setup
+
+### Step 1: Navigate to Project Root
+
+Open a NEW Command Prompt/PowerShell terminal:
+
+```bash
+cd d:\event-booking-system
+```
+
+### Step 2: Install Flutter Dependencies
+
+```bash
+flutter pub get
+```
+
+### Step 3: Verify Flutter Setup
+
+```bash
+flutter doctor
+```
+
+Ensure all required items have checkmarks. If Android Studio or Visual Studio is missing, install them as suggested.
+
+### Step 4: Configure API Base URL (if needed)
+
+The app should already be configured to connect to `http://localhost:3000`. If you need to change it:
+
+Edit `lib/services/dio_client.dart` (if it exists):
+
+```dart
+static const String _baseUrl = 'http://localhost:3000';
+```
+
+**Note for Android Emulator:** Use `http://10.0.2.2:3000` instead of `localhost`
+
+**Note for Physical Device:** Use your computer's IP address (e.g., `http://192.168.1.5:3000`)
+
+### Step 5: Run the Flutter App
+
+#### Option A: Run on Android Emulator
+
+1. Open Android Studio
+2. Go to Tools → Device Manager
+3. Create a new Virtual Device (Pixel 5 or similar)
+4. Start the emulator
+5. In your terminal:
+   ```bash
+   flutter run
+   ```
+
+#### Option B: Run on Physical Android Device
+
+1. Enable Developer Options on your phone
+2. Enable USB Debugging
+3. Connect phone via USB
+4. In your terminal:
+   ```bash
+   flutter devices
+   flutter run
+   ```
+
+#### Option C: Run on iOS Simulator (Mac only)
+
+```bash
+open -a Simulator
+flutter run
+```
+
+#### Option D: Run on Web
+
+```bash
+flutter run -d chrome
+```
+
+---
+
+## 🔑 Test Credentials
+
+After seeding the database, you can use these credentials to log in:
+
+| Role             | Email                    | Password         |
+| ---------------- | ------------------------ | ---------------- |
+| Consumer         | consumer@eventbooker.com | EventBooker@2026 |
+| Provider (Hall)  | Mohammed@eventbooker.com | EventBooker@2026 |
+| Provider (Car)   | arhab@eventbooker.com    | EventBooker@2026 |
+| Provider (Photo) | teshreen@eventbooker.com | EventBooker@2026 |
+| Provider (DJ)    | dj@eventbooker.com       | EventBooker@2026 |
+| Admin            | admin@eventbooker.com    | EventBooker@2026 |
+
+---
+
+## 🐛 Troubleshooting
+
+### Backend Issues
+
+**"Cannot connect to database"**
+
+- Ensure PostgreSQL is running (check Windows Services)
+- Verify password in `.env` matches your PostgreSQL password
+- Try: `psql -U postgres -d event_booking` to test connection
+
+**"Redis connection failed"**
+
+- Ensure Redis service is running (check Windows Services)
+- Open Task Manager and look for redis-server.exe
+
+**"Port 3000 already in use"**
+
+- Kill the process using port 3000:
+  ```bash
+  netstat -ano | findstr :3000
+  taskkill /PID <PID> /F
+  ```
+
+### Flutter Issues
+
+**"No connected devices"**
+
+- Ensure Android emulator is running or physical device is connected
+- Run `flutter devices` to see available devices
+- Run `flutter doctor` to check for issues
+
+**"Flutter command not found"**
+
+- Close and reopen your terminal (PATH changes need new terminal)
+- Verify Flutter is in your PATH: `echo %PATH%`
+
+**"Gradle build failed"**
+
+- Run: `flutter clean`
+- Then: `flutter pub get`
+- Then: `flutter run` again
+
+**"Cannot connect to backend from app"**
+
+- For Android emulator: Change API URL to `http://10.0.2.2:3000`
+- For physical device: Use your computer's IP address (find it with `ipconfig`)
+- Ensure backend server is running
+- Check Windows Firewall isn't blocking port 3000
+
+---
+
+## 📁 Project Structure
+
+```
+event-booking-system/
+├── backend/              # Node.js backend
+│   ├── src/             # Source code
+│   ├── prisma/          # Database schema & migrations
+│   └── uploads/         # Uploaded files
+├── lib/                 # Flutter app source
+│   ├── components/      # Reusable UI components
+│   ├── screens/         # App screens
+│   ├── services/        # API services
+│   └── models/          # Data models
+├── android/             # Android-specific files
+├── ios/                 # iOS-specific files
+└── assets/              # Images, fonts, locales
+```
+
+---
+
+## 🌐 API Endpoints
+
+Once the backend is running, you can access:
+
+- **API Base URL:** `http://localhost:3000`
+- **Health Check:** `http://localhost:3000/`
+- **API Documentation:** `http://localhost:3000/docs` (Swagger UI)
+
+### Main Endpoints:
+
+- `POST /api/v1/auth/register` - Register new user
+- `POST /api/v1/auth/login` - Login
+- `GET /api/v1/services` - List services
+- `POST /api/v1/bookings` - Create booking
+- `GET /api/v1/bookings` - Get user bookings
+
+---
+
+## 🚀 Running with Docker (Alternative)
+
+If you have Docker installed, you can run everything with Docker Compose:
+
+```bash
+# From project root
+docker-compose up -d
+```
+
+This will start PostgreSQL, Redis, and the backend server automatically.
+
+---
+
+## 📝 Additional Documentation
+
+- **Architecture Details:** See `ARCHITECTURE.md`
+- **Backend Setup:** See `BACKEND_SETUP.md`
+
+---
+
+## 🤝 Support
+
+If you encounter any issues not covered here:
+
+1. Check the troubleshooting section above
+2. Review `ARCHITECTURE.md` for technical details
+3. Review `BACKEND_SETUP.md` for backend-specific issues
+
+---
+
+## ✨ Features
+
+- **User Authentication:** JWT-based secure authentication
+- **Service Booking:** Book halls, cars, photographers, entertainers
+- **Provider Dashboard:** Manage services, availability, and bookings
+- **Real-time Updates:** WebSocket integration for live updates
+- **Payment Integration:** Stripe payment processing
+- **Multi-language:** Support for Arabic and English
+- **Dark/Light Theme:** Beautiful UI with theme support
+
+---
+
+Happy coding! 🎉

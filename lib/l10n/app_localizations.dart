@@ -187,6 +187,8 @@ class AppLocalizations {
   String get forgotPasswordQuestion => translate('forgot_password_question');
   String get send => translate('send');
   String get resetLinkSent => translate('reset_link_sent');
+  String get resetPasswordInstructions =>
+      translate('reset_password_instructions');
   String get pleaseEnterYourEmail => translate('please_enter_your_email');
   String get pleaseEnterValidEmail => translate('please_enter_valid_email');
   String get pleaseEnterYourPassword => translate('please_enter_your_password');

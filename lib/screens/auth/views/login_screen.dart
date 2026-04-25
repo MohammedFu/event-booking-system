@@ -22,7 +22,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   bool _rememberMe = false;
-  String? _error;
 
   static const String _rememberMeKey = 'remember_me';
   static const String _savedEmailKey = 'saved_email';

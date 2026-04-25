@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:munasabati/components/service_image.dart';
 import 'package:munasabati/constants.dart';
 import 'package:munasabati/l10n/app_localizations.dart';
 import 'package:munasabati/l10n/model_localizations.dart';
@@ -23,6 +24,8 @@ class _DateTimePickerScreenState extends State<DateTimePickerScreen> {
   final _specialRequestsController = TextEditingController();
   late Future<List<TimeSlot>> _slotsFuture;
 
+  ServiceModel get service => widget.service;
+
   @override
   void initState() {
     super.initState();
@@ -31,7 +34,7 @@ class _DateTimePickerScreenState extends State<DateTimePickerScreen> {
 
   Future<List<TimeSlot>> _fetchSlots() async {
     final provider = context.read<BookingProvider>();
-    return await provider.fetchAvailableSlots(widget.service.id, _selectedDate);
+    return provider.fetchAvailableSlots(widget.service.id, _selectedDate);
   }
 
   void _refreshSlots() {
@@ -50,7 +53,6 @@ class _DateTimePickerScreenState extends State<DateTimePickerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final service = widget.service;
     final l10n = AppLocalizations.of(context);
 
     return Scaffold(
@@ -91,8 +93,12 @@ class _DateTimePickerScreenState extends State<DateTimePickerScreen> {
                       if (snapshot.connectionState == ConnectionState.waiting)
                         const Center(child: CircularProgressIndicator())
                       else if (snapshot.hasError)
-                        Text(context.tr('error_with_message',
-                            params: {'message': snapshot.error.toString()}))
+                        Text(
+                          context.tr(
+                            'error_with_message',
+                            params: {'message': snapshot.error.toString()},
+                          ),
+                        )
                       else if (snapshot.hasData)
                         _buildTimeSlots(context, snapshot.data!)
                       else
@@ -131,6 +137,8 @@ class _DateTimePickerScreenState extends State<DateTimePickerScreen> {
   }
 
   Widget _buildServiceSummary(BuildContext context, ServiceModel service) {
+    final imageUrl = service.images.isNotEmpty ? service.images.first : null;
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -144,39 +152,34 @@ class _DateTimePickerScreenState extends State<DateTimePickerScreen> {
           ),
         ],
       ),
-      child: Row(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: SizedBox(
-              width: 60,
-              height: 60,
-              child: service.images.isNotEmpty
-                  ? Image.network(service.images.first,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Container(
-                            color: primaryColor.withOpacity(0.1),
-                            child: Icon(service.serviceTypeIcon,
-                                color: primaryColor, size: 24),
-                          ))
-                  : Container(
-                      color: primaryColor.withOpacity(0.1),
-                      child: Icon(service.serviceTypeIcon,
-                          color: primaryColor, size: 24),
-                    ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isCompact = constraints.maxWidth < 360;
+
+          if (isCompact) {
+            return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                SizedBox(
+                  width: 64,
+                  height: 64,
+                  child: ServiceImage(
+                    imageUrl: imageUrl,
+                    fallbackIcon: service.serviceTypeIcon,
+                    borderRadius: BorderRadius.circular(8),
+                    iconSize: 24,
+                  ),
+                ),
+                const SizedBox(height: 12),
                 Text(
                   service.title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
                 ),
+                const SizedBox(height: 4),
                 Text(
                   '${formatPrice(service.basePrice)} ${service.pricingModel.suffix(context)}',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -185,9 +188,47 @@ class _DateTimePickerScreenState extends State<DateTimePickerScreen> {
                       ),
                 ),
               ],
-            ),
-          ),
-        ],
+            );
+          }
+
+          return Row(
+            children: [
+              SizedBox(
+                width: 60,
+                height: 60,
+                child: ServiceImage(
+                  imageUrl: imageUrl,
+                  fallbackIcon: service.serviceTypeIcon,
+                  borderRadius: BorderRadius.circular(8),
+                  iconSize: 24,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      service.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                    Text(
+                      '${formatPrice(service.basePrice)} ${service.pricingModel.suffix(context)}',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: primaryColor,
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -201,12 +242,14 @@ class _DateTimePickerScreenState extends State<DateTimePickerScreen> {
           firstDate: DateTime.now(),
           lastDate: DateTime.now().add(const Duration(days: 365)),
         );
-        if (date != null) {
-          setState(() {
-            _selectedDate = date;
-          });
-          _refreshSlots();
+        if (date == null) {
+          return;
         }
+
+        setState(() {
+          _selectedDate = date;
+        });
+        _refreshSlots();
       },
       borderRadius: BorderRadius.circular(defaultBorderRadious),
       child: Container(
@@ -214,19 +257,21 @@ class _DateTimePickerScreenState extends State<DateTimePickerScreen> {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(defaultBorderRadious),
           border: Border.all(
-              color: Theme.of(context).dividerColor.withOpacity(0.3)),
+            color: Theme.of(context).dividerColor.withOpacity(0.3),
+          ),
         ),
         child: Row(
           children: [
             const Icon(Icons.calendar_today, color: primaryColor),
             const SizedBox(width: 12),
-            Text(
-              '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+            Expanded(
+              child: Text(
+                '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
             ),
-            const Spacer(),
             const Icon(Icons.chevron_right),
           ],
         ),
@@ -246,12 +291,15 @@ class _DateTimePickerScreenState extends State<DateTimePickerScreen> {
         return GestureDetector(
           onTap: slot.isAvailable
               ? () {
+                  final endMinutes = slot.startTime.hour * 60 +
+                      slot.startTime.minute +
+                      (service.minDurationHours * 60).round();
+
                   setState(() {
                     _selectedStartTime = slot.startTime;
                     _selectedEndTime = TimeOfDay(
-                      hour: slot.startTime.hour +
-                          service.minDurationHours.toInt(),
-                      minute: slot.startTime.minute,
+                      hour: (endMinutes ~/ 60) % 24,
+                      minute: endMinutes % 60,
                     );
                   });
                 }
@@ -289,8 +337,6 @@ class _DateTimePickerScreenState extends State<DateTimePickerScreen> {
       }).toList(),
     );
   }
-
-  ServiceModel get service => widget.service;
 
   Widget _buildBottomBar(BuildContext context, ServiceModel service) {
     final provider = context.read<BookingProvider>();
@@ -332,36 +378,51 @@ class _DateTimePickerScreenState extends State<DateTimePickerScreen> {
                   ],
                 ),
               ),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: canAdd
-                        ? () {
-                            _addToCartAndContinue(context, provider);
-                          }
-                        : null,
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                    ),
-                    child: Text(context.tr('add_and_browse_more')),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final addMoreButton = OutlinedButton(
+                  onPressed: canAdd
+                      ? () {
+                          _addToCartAndContinue(context, provider);
+                        }
+                      : null,
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: canAdd
-                        ? () {
-                            _addToCartAndCheckout(context, provider);
-                          }
-                        : null,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                    ),
-                    child: Text(context.tr('add_to_cart')),
+                  child: Text(context.tr('add_and_browse_more')),
+                );
+
+                final checkoutButton = ElevatedButton(
+                  onPressed: canAdd
+                      ? () {
+                          _addToCartAndCheckout(context, provider);
+                        }
+                      : null,
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
-                ),
-              ],
+                  child: Text(context.tr('add_to_cart')),
+                );
+
+                if (constraints.maxWidth < 420) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      addMoreButton,
+                      const SizedBox(height: 12),
+                      checkoutButton,
+                    ],
+                  );
+                }
+
+                return Row(
+                  children: [
+                    Expanded(child: addMoreButton),
+                    const SizedBox(width: 12),
+                    Expanded(child: checkoutButton),
+                  ],
+                );
+              },
             ),
           ],
         ),
@@ -370,8 +431,10 @@ class _DateTimePickerScreenState extends State<DateTimePickerScreen> {
   }
 
   String _calculatePrice(ServiceModel service) {
-    if (_selectedStartTime == null || _selectedEndTime == null)
+    if (_selectedStartTime == null || _selectedEndTime == null) {
       return formatPrice(0);
+    }
+
     final durationMinutes =
         (_selectedEndTime!.hour * 60 + _selectedEndTime!.minute) -
             (_selectedStartTime!.hour * 60 + _selectedStartTime!.minute);
@@ -380,6 +443,7 @@ class _DateTimePickerScreenState extends State<DateTimePickerScreen> {
     if (service.pricingModel == PricingModel.hourly) {
       return formatPrice(service.basePrice * durationHours);
     }
+
     return formatPrice(service.basePrice);
   }
 
@@ -405,8 +469,10 @@ class _DateTimePickerScreenState extends State<DateTimePickerScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          context
-              .tr('added_to_booking_cart', params: {'service': service.title}),
+          context.tr(
+            'added_to_booking_cart',
+            params: {'service': service.title},
+          ),
         ),
         action: SnackBarAction(
           label: context.tr('undo'),
@@ -440,7 +506,10 @@ class _DateTimePickerScreenState extends State<DateTimePickerScreen> {
   }
 
   double _calculateDuration() {
-    if (_selectedStartTime == null || _selectedEndTime == null) return 1;
+    if (_selectedStartTime == null || _selectedEndTime == null) {
+      return 1;
+    }
+
     final startMinutes =
         _selectedStartTime!.hour * 60 + _selectedStartTime!.minute;
     final endMinutes = _selectedEndTime!.hour * 60 + _selectedEndTime!.minute;
@@ -458,16 +527,18 @@ class _DateTimePickerScreenState extends State<DateTimePickerScreen> {
           children: [
             Text(context.tr('time_conflicts_with')),
             const SizedBox(height: 8),
-            ...conflicts.map((c) => Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.warning, size: 16, color: warningColor),
-                      const SizedBox(width: 8),
-                      Expanded(child: Text(c)),
-                    ],
-                  ),
-                )),
+            ...conflicts.map(
+              (conflict) => Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Row(
+                  children: [
+                    const Icon(Icons.warning, size: 16, color: warningColor),
+                    const SizedBox(width: 8),
+                    Expanded(child: Text(conflict)),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
         actions: [

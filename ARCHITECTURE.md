@@ -742,18 +742,19 @@ Consumer selects slot
 | Booking Model copyWith     | `BookingModel.copyWith()`                                     | ✅ Complete        |
 | Route Constants            | 10 new routes added                                           | ✅ Complete        |
 | Localization (EN/AR)       | 55+ new keys added                                            | ✅ Complete        |
+| App Shell Cleanup          | Template screens/routes removed from the consumer shell       | ✅ Complete        |
 
-### 🔲 Pending (Phase 3 - Backend Integration)
+### 🟡 Current Remaining Work (Phase 3 - Phase 5)
 
-| Component                                   | Status                              |
-| ------------------------------------------- | ----------------------------------- |
-| Dio HTTP Client + Interceptors              | 🔲 Replace mock with real Dio calls |
-| JWT Secure Storage (flutter_secure_storage) | 🔲 Implement                        |
-| WebSocket Client (Socket.io)                | 🔲 Real-time booking updates        |
-| Stripe Payment SDK                          | 🔲 Payment flow integration         |
-| Push Notifications (Firebase)               | 🔲 FCM integration                  |
-| Image Upload (Provider)                     | 🔲 Service photo management         |
-| Deep Linking                                | 🔲 Share service/booking links      |
-| Offline Mode (Hive/Isar)                    | 🔲 Cache for offline access         |
-| Analytics (Mixpanel/Firebase)               | 🔲 Event tracking                   |
-| CI/CD Pipeline                              | 🔲 GitHub Actions + Fastlane        |
+| Component                                   | Status                                                             |
+| ------------------------------------------- | ------------------------------------------------------------------ |
+| Dio HTTP Client + Interceptors              | ✅ Real Dio client, auth refresh, retry handling, and API wiring   |
+| JWT Secure Storage (flutter_secure_storage) | ✅ Implemented                                                     |
+| WebSocket Client (Socket.io)                | ✅ Authenticated Socket.io rooms now sync booking/payment events   |
+| Stripe Payment SDK                          | 🟡 Backend payment endpoints exist; Flutter SDK/payment sheet pending |
+| Push Notifications (Firebase)               | ✅ FCM token sync, background handling, and platform wiring added  |
+| Image Upload (Provider)                     | ✅ Implemented for provider service management                     |
+| Deep Linking                                | ✅ `munasabati://service/:id` and `munasabati://booking/:id` added |
+| Offline Mode (Hive/Isar)                    | 🟡 SharedPreferences cache + offline fallback implemented; full sync engine still pending |
+| Analytics (Mixpanel/Firebase)               | 🟡 Firebase Analytics event hooks added; dashboard/reporting pending |
+| CI/CD Pipeline                              | 🟡 GitHub Actions CI scaffold added; mobile release automation still pending |

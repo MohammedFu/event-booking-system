@@ -1,3 +1,11 @@
+def sharedFlutterAndroid = [
+    compileSdkVersion: 35,
+    compileSdk       : 35,
+    minSdkVersion    : 23,
+    targetSdkVersion : 35,
+    ndkVersion       : "26.1.10909125",
+]
+
 allprojects {
     repositories {
         google()
@@ -6,8 +14,12 @@ allprojects {
 }
 
 rootProject.buildDir = '../build'
-subprojects {
-    project.buildDir = "${rootProject.buildDir}/${project.name}"
+subprojects { subproject ->
+    if (subproject.name != "app" && !subproject.hasProperty("flutter")) {
+        subproject.ext.flutter = sharedFlutterAndroid
+    }
+
+    subproject.buildDir = "${rootProject.buildDir}/${subproject.name}"
 }
 subprojects {
     project.evaluationDependsOn(':app')

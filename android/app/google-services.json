@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "982143818454",
+    "project_id": "event-booker-system",
+    "storage_bucket": "event-booker-system.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:982143818454:android:cda8b1ac26baf659cd8777",
+        "android_client_info": {
+          "package_name": "com.event.booking"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBBB-p4tEz_CFkAvSaQsOF-uc9qkMlsJDk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
